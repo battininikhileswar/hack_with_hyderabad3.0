@@ -1,0 +1,581 @@
+{
+  "contacts": [
+    {
+      "id": "contact-elena-rostova",
+      "name": "Elena Rostova",
+      "company": "FinScale Corp",
+      "role": "VP of Engineering",
+      "email": "elena.rostova@finscale.io",
+      "createdAt": "2026-07-01T09:00:00.000Z"
+    },
+    {
+      "id": "contact-marcus-vance",
+      "name": "Marcus Vance",
+      "company": "HealthBridge Telehealth",
+      "role": "Head of Product",
+      "email": "m.vance@healthbridge.med",
+      "createdAt": "2026-07-01T10:00:00.000Z"
+    },
+    {
+      "id": "contact-amara-chen",
+      "name": "Amara Chen",
+      "company": "Orbit Logistics",
+      "role": "Chief Technology Officer",
+      "email": "amara.chen@orbitlogistics.net",
+      "createdAt": "2026-07-01T11:00:00.000Z"
+    },
+    {
+      "id": "contact-devon-miller",
+      "name": "Devon Miller",
+      "company": "CloudScale SaaS",
+      "role": "VP of Sales Operations",
+      "email": "devon@cloudscalesaas.com",
+      "createdAt": "2026-07-01T12:00:00.000Z"
+    },
+    {
+      "id": "contact-nikhileswar-1790672967144",
+      "name": "nikhileswar",
+      "company": "apex ",
+      "role": "manager",
+      "email": "nikhil@apex.com",
+      "createdAt": "2026-09-29T09:09:27.144Z"
+    }
+  ],
+  "meetings": [
+    {
+      "id": "elena-m1",
+      "contactId": "contact-elena-rostova",
+      "date": "2026-07-08",
+      "summary": "Initial technical discovery on real-time risk orchestration pipeline. Elena outlined strict regulatory compliance needs and low-latency throughput criteria for transaction verification.",
+      "promisesMade": [
+        "We promised p99 latency benchmarks under 50ms across 10,000 requests/sec by July 15th",
+        "Elena promised to share sample sanitized PCI-DSS compliance payloads"
+      ],
+      "openQuestions": [
+        "Can the platform deploy in FinScale’s isolated AWS eu-central-1 Frankfurt VPC?",
+        "Does our SOC2 Type II report cover real-time streaming ingestion?"
+      ],
+      "sentiment": "positive",
+      "rawNotes": "Great introductory energy. Elena was impressed with our distributed event architecture. Stressed that regulatory audits happen every October, so timelines cannot slip.",
+      "actionItems": [
+        "Run latency load tests",
+        "Send sanitized payload NDA"
+      ]
+    },
+    {
+      "id": "elena-m2",
+      "contactId": "contact-elena-rostova",
+      "date": "2026-07-22",
+      "summary": "Benchmark results review with Elena and Lead Architect Marcus Berg. Benchmarks achieved 48ms p99 on individual events, but degraded to 85ms on batched payloads exceeding 5MB.",
+      "promisesMade": [
+        "We promised a dedicated AWS VPC peering architecture demonstration by August 5th to isolate batch payloads",
+        "We promised to investigate batch chunking optimization in our gateway"
+      ],
+      "openQuestions": [
+        "Can we stream raw audit logs directly into FinScale’s Datadog and AWS S3 SIEM without intermediate storage?"
+      ],
+      "sentiment": "neutral",
+      "rawNotes": "Elena was visibly concerned by the 85ms batch degradation. Mentioned their core trading rule engine cannot tolerate spikes over 60ms. Architect Marcus was skeptical of our gateway buffering.",
+      "actionItems": [
+        "Provision VPC peering sandbox",
+        "Draft Datadog audit streaming spec"
+      ]
+    },
+    {
+      "id": "elena-m3",
+      "contactId": "contact-elena-rostova",
+      "date": "2026-08-07",
+      "summary": "VPC peering demo debrief. The demo occurred 3 days late due to internal Terraform provisioning locks. Latency improved to 54ms p99 on batch payloads.",
+      "promisesMade": [
+        "We promised a production-ready Datadog audit streaming adapter spec by August 28th",
+        "We promised no further delays on scheduled milestone deliverables"
+      ],
+      "openQuestions": [
+        "Recurring: Can we stream audit logs directly to Datadog before their October 15 compliance deadline?",
+        "What happens during AWS cross-region failover between Frankfurt and Zurich?"
+      ],
+      "sentiment": "neutral",
+      "rawNotes": "Elena was annoyed by the 3-day demo delay: \"Our sprint planning is tightly coupled to these dates.\" Latency improvements helped alleviate immediate technical panic, but trust took a hit.",
+      "actionItems": [
+        "Deliver Datadog streaming spec by Aug 28",
+        "Document failover DR strategy"
+      ]
+    },
+    {
+      "id": "elena-m4",
+      "contactId": "contact-elena-rostova",
+      "date": "2026-08-21",
+      "summary": "Architecture check-in regarding audit compliance and Datadog streaming. Our team admitted the Datadog adapter would require custom engineering and might not make the initial pilot release.",
+      "promisesMade": [
+        "We promised to confirm executive product prioritization for the Datadog adapter by August 28th"
+      ],
+      "openQuestions": [
+        "Unresolved: Is Datadog audit streaming a hard contractual prerequisite for signing the $180k ARR contract?",
+        "Will FinScale accept an interim S3 bucket drop for audit trails?"
+      ],
+      "sentiment": "negative",
+      "rawNotes": "Elena was blunt: \"If Datadog streaming isn’t in the pilot by October 1st, my VP of Risk will not permit us to point production payment flows to your endpoint. S3 drops are not acceptable for real-time fraud monitoring.\"",
+      "actionItems": [
+        "Escalate Datadog adapter priority to VP of Product",
+        "Prepare executive briefing"
+      ]
+    },
+    {
+      "id": "elena-m5",
+      "contactId": "contact-elena-rostova",
+      "date": "2026-09-04",
+      "summary": "Broken promise escalation meeting. The August 28th commitment to confirm Datadog streaming prioritization was missed; product team rejected the custom adapter for Q3.",
+      "promisesMade": [
+        "We promised an executive escalation call with our CTO and Head of Engineering by September 10th",
+        "We promised a formal written response on custom SLA penalties if latency exceeds 60ms"
+      ],
+      "openQuestions": [
+        "Unresolved: Can our platform legally guarantee 99.99% uptime with financial penalties?",
+        "Has FinScale started vetting alternative vendors?"
+      ],
+      "sentiment": "negative",
+      "rawNotes": "Elena began the meeting stating: \"I am extremely disappointed. This is the second milestone your team has missed. The lack of proactive communication makes it impossible for me to defend this partnership to our C-suite.\"",
+      "actionItems": [
+        "Schedule CTO-to-VP sync",
+        "Draft SLA penalty clause"
+      ]
+    },
+    {
+      "id": "elena-m6",
+      "contactId": "contact-elena-rostova",
+      "date": "2026-09-18",
+      "summary": "High-stakes executive sync. Elena disclosed that FinScale’s CTO has begun parallel evaluation of Confluent Cloud with native AWS event streaming as a fallback.",
+      "promisesMade": [
+        "We promised our legal team would return redlines on FinScale’s Master Services Agreement (MSA) within 5 business days (by Sept 23)",
+        "We promised a temporary workaround proxy for Datadog streaming at zero additional professional services cost"
+      ],
+      "openQuestions": [
+        "Unresolved: Will the board approve $180k ARR given the dual-vendor evaluation?",
+        "Will our legal team accept the uncapped liability clause on data breach indemnification?"
+      ],
+      "sentiment": "negative",
+      "rawNotes": "Hostile atmosphere. Elena was accompanied by their procurement director. She stated plainly: \"You have until the end of September to provide acceptable redlines and a working Datadog logging stream, or we are terminating the POC.\"",
+      "actionItems": [
+        "Expedite legal redlines on MSA",
+        "Deploy Datadog proxy container to staging"
+      ]
+    },
+    {
+      "id": "elena-m7",
+      "contactId": "contact-elena-rostova",
+      "date": "2026-09-25",
+      "summary": "Critical pre-deadline review. The September 23rd legal redlines deadline was missed by our legal counsel. The Datadog proxy container failed health checks in staging.",
+      "promisesMade": [
+        "We promised a direct call between our General Counsel and FinScale legal on Monday Sept 28th"
+      ],
+      "openQuestions": [
+        "Unresolved: Is the POC officially suspended or can we salvage the Q4 pilot rollout?",
+        "Unresolved: Will FinScale agree to a 30-day grace period?"
+      ],
+      "sentiment": "negative",
+      "rawNotes": "Elena informed us that the pilot is officially on freeze: \"I cannot continue wasting engineering hours on missed promises. If your GC does not resolve the liability redlines and staging proxy on Monday, we are moving ahead with Confluent.\"",
+      "actionItems": [
+        "Prepare crisis escalation docket for General Counsel",
+        "Fix staging proxy container crash"
+      ]
+    },
+    {
+      "id": "marcus-m1",
+      "contactId": "contact-marcus-vance",
+      "date": "2026-07-02",
+      "summary": "Exploratory demo for clinician credentialing and automated patient onboarding workflows. Marcus loved the modern API documentation and granular webhook triggers.",
+      "promisesMade": [
+        "We promised sandbox API keys and full Postman collections by July 3rd",
+        "Marcus promised to connect our team with their HIPAA compliance officer"
+      ],
+      "openQuestions": [
+        "Does our platform sign standard Business Associate Agreements (BAA)?"
+      ],
+      "sentiment": "positive",
+      "rawNotes": "Marcus was enthusiastic about eliminating their manual 4-day doctor verification bottleneck. Very impressed by the SDK developer ergonomics.",
+      "actionItems": [
+        "Send sandbox keys",
+        "Share standard HIPAA BAA template"
+      ]
+    },
+    {
+      "id": "marcus-m2",
+      "contactId": "contact-marcus-vance",
+      "date": "2026-07-16",
+      "summary": "Sandbox evaluation check-in. HealthBridge successfully onboarded 40 mock clinicians across 3 state jurisdictions with zero API support tickets.",
+      "promisesMade": [
+        "We promised countersigned HIPAA BAA execution within 48 hours",
+        "Marcus promised to draft their 12-month seat forecast"
+      ],
+      "openQuestions": [
+        "Can automated verification alerts be routed to Slack and PagerDuty simultaneously?"
+      ],
+      "sentiment": "positive",
+      "rawNotes": "Tremendous feedback. Marcus shared: \"Our ops team completed in 3 hours what used to take two business days.\" Moving straight into commercial negotiation.",
+      "actionItems": [
+        "Execute BAA with legal",
+        "Provide PagerDuty webhook template"
+      ]
+    },
+    {
+      "id": "marcus-m3",
+      "contactId": "contact-marcus-vance",
+      "date": "2026-07-30",
+      "summary": "BAA executed successfully. Marcus introduced Chief Medical Officer Dr. Priya Nair. Reviewed automated NPI registry and state medical board license lookup speed.",
+      "promisesMade": [
+        "We promised a private preview of the multi-tenant workspace role management feature by August 12th"
+      ],
+      "openQuestions": [
+        "Can medical staff be organized into regional sub-organizations with restricted clinical record visibility?"
+      ],
+      "sentiment": "positive",
+      "rawNotes": "Dr. Nair praised the UI responsiveness and verification accuracy. Marcus indicated they want to expand beyond onboarding to recurring credential re-attestation.",
+      "actionItems": [
+        "Enroll HealthBridge in multi-tenant feature preview",
+        "Send security questionnaire responses"
+      ]
+    },
+    {
+      "id": "marcus-m4",
+      "contactId": "contact-marcus-vance",
+      "date": "2026-08-14",
+      "summary": "Multi-tenant feature preview walkthrough. Delivered on time. Marcus demonstrated the sub-organization hierarchy for their Midwest and Northeast clinical divisions.",
+      "promisesMade": [
+        "We promised Okta SAML 2.0 and SCIM user provisioning documentation by August 28th",
+        "Marcus promised to present the expansion proposal to their CFO on August 20th"
+      ],
+      "openQuestions": [
+        "Does SCIM provisioning support custom clinician attribute mapping (e.g., DEA license number)?"
+      ],
+      "sentiment": "positive",
+      "rawNotes": "Seamless demo. Marcus confirmed their CFO gave preliminary approval for an annual commitment. Team is extremely collaborative and appreciative.",
+      "actionItems": [
+        "Send Okta SAML setup guide",
+        "Confirm custom SCIM attribute schema"
+      ]
+    },
+    {
+      "id": "marcus-m5",
+      "contactId": "contact-marcus-vance",
+      "date": "2026-08-28",
+      "summary": "Security & identity review with HealthBridge IT lead Kevin. Okta SAML configuration tested and verified on staging in under 20 minutes.",
+      "promisesMade": [
+        "We promised custom SCIM attribute mapping support for DEA numbers in our September release (v2.4)",
+        "Marcus promised to initiate procurement vendor setup paperwork"
+      ],
+      "openQuestions": [
+        "What tier of support includes 1-hour critical SLA and dedicated Slack channel?"
+      ],
+      "sentiment": "positive",
+      "rawNotes": "Kevin commented that our SAML integration was the smoothest SaaS deployment they have completed this fiscal year. Marcus confirmed Enterprise tier upgrade.",
+      "actionItems": [
+        "Prepare Enterprise MSA contract",
+        "Deploy DEA custom field to v2.4 staging"
+      ]
+    },
+    {
+      "id": "marcus-m6",
+      "contactId": "contact-marcus-vance",
+      "date": "2026-09-11",
+      "summary": "Commercial negotiation sync. Upgraded proposal from Pro ($36,000 ARR) to Enterprise Tier ($92,000 ARR) covering 500 clinicians across 14 state networks.",
+      "promisesMade": [
+        "We promised dedicated shared Slack channel with engineering support on contract execution",
+        "We promised custom invoice terms (Net-45) per HealthBridge accounting guidelines"
+      ],
+      "openQuestions": [
+        "Can we schedule an executive sponsor quarterly business review (QBR) for November?"
+      ],
+      "sentiment": "positive",
+      "rawNotes": "Contract terms mutually agreed. Marcus expressed immense gratitude for our engineering team’s responsiveness and delivery speed.",
+      "actionItems": [
+        "Generate final executable Order Form with Net-45",
+        "Lock QBR date in Nov"
+      ]
+    },
+    {
+      "id": "marcus-m7",
+      "contactId": "contact-marcus-vance",
+      "date": "2026-09-24",
+      "summary": "Contract execution celebration & Q4 rollout kickoff. Signed $92,000 ARR Enterprise contract received. Marcus agreed to co-present a customer success case study.",
+      "promisesMade": [
+        "We promised to draft the customer case study outline by October 8th",
+        "Marcus agreed to keynote at our customer summit in November"
+      ],
+      "openQuestions": [
+        "When can HealthBridge begin early testing of the upcoming predictive license expiry alert engine?"
+      ],
+      "sentiment": "positive",
+      "rawNotes": "Outstanding customer relationship. Marcus said: \"Partnering with you was our best technology decision of 2026.\" Full expansion underway.",
+      "actionItems": [
+        "Schedule case study interview with marketing",
+        "Activate Enterprise SLA monitoring"
+      ]
+    },
+    {
+      "id": "amara-m1",
+      "contactId": "contact-amara-chen",
+      "date": "2026-07-10",
+      "summary": "Scoping automated freight route re-optimization and driver handheld app synchronization. Amara outlined severe cellular dead-zone challenges in mountainous Midwest freight corridors.",
+      "promisesMade": [
+        "We promised an Android offline sync SDK prototype by July 28th",
+        "Amara promised to provide sample telemetry traces from 50 test trucks"
+      ],
+      "openQuestions": [
+        "How does local SQLite storage on driver tablets handle 2-way conflict resolution when reconnecting after 4 hours offline?"
+      ],
+      "sentiment": "positive",
+      "rawNotes": "Amara is a sharp, no-nonsense technical leader. Stressed that 850 long-haul drivers rely on these tablets; application crashes directly cause delivery delays.",
+      "actionItems": [
+        "Build offline sync SDK prototype",
+        "Analyze sample telemetry traces"
+      ]
+    },
+    {
+      "id": "amara-m2",
+      "contactId": "contact-amara-chen",
+      "date": "2026-07-29",
+      "summary": "Broken promise review. Our mobile team was reassigned to a core outage, and the July 28th offline SDK prototype was delayed by two weeks.",
+      "promisesMade": [
+        "We promised guaranteed delivery of the offline SDK prototype by August 11th with dedicated engineer pairing"
+      ],
+      "openQuestions": [
+        "Will the delay jeopardize Orbit’s scheduled field testing ahead of the Q4 peak shipping surge in October?"
+      ],
+      "sentiment": "neutral",
+      "rawNotes": "Amara expressed deep disappointment: \"We cannot afford surprises. Our peak shipping window begins in October; every week lost in July compresses field testing.\"",
+      "actionItems": [
+        "Assign senior mobile developer exclusively to Orbit SDK",
+        "Weekly progress updates"
+      ]
+    },
+    {
+      "id": "amara-m3",
+      "contactId": "contact-amara-chen",
+      "date": "2026-08-11",
+      "summary": "Offline SDK prototype demonstration. Basic offline queueing functioned, but Amara’s mobile lead flagged severe battery drain (18% per hour) due to unthrottled background GPS polling.",
+      "promisesMade": [
+        "We promised patch v1.2 with adaptive GPS geofencing and battery drain under 5%/hr by August 20th"
+      ],
+      "openQuestions": [
+        "Why was background energy profiling not executed before the prototype demonstration?",
+        "Can driver devices wake up via high-priority FCM push notifications when offline?"
+      ],
+      "sentiment": "neutral",
+      "rawNotes": "Amara was visibly unimpressed by the battery drain oversight: \"Our drivers will unseat and disable the tablets if their battery dies mid-shift. This should have been caught in internal testing.\"",
+      "actionItems": [
+        "Implement adaptive GPS throttling",
+        "Run 8-hour battery discharge benchmarks"
+      ]
+    },
+    {
+      "id": "amara-m4",
+      "contactId": "contact-amara-chen",
+      "date": "2026-08-25",
+      "summary": "Second broken promise review. Patch v1.2 was delayed past August 20th due to a regression in SQLite vector indexing. Delivered 5 days late on August 25th.",
+      "promisesMade": [
+        "We promised that our VP of Engineering would conduct weekly sprint retrospectives with Orbit’s mobile team",
+        "We promised complete load test benchmarks on 50,000 GPS events/sec by September 8th"
+      ],
+      "openQuestions": [
+        "Can Orbit trust our team’s engineering velocity for a mission-critical fleet deployment?",
+        "Recurring: Can the cloud ingestion pipeline handle sudden bursts of 50,000 telemetry events/sec when hundreds of trucks re-enter cellular coverage simultaneously?"
+      ],
+      "sentiment": "negative",
+      "rawNotes": "Amara was stern: \"This is the second commitment missed within 30 days. We are operating real freight carrying millions in cargo. If your engineering rigor does not improve immediately, we will terminate the pilot.\"",
+      "actionItems": [
+        "Executive sponsor involvement",
+        "Execute 50k events/sec load test script"
+      ]
+    },
+    {
+      "id": "amara-m5",
+      "contactId": "contact-amara-chen",
+      "date": "2026-09-08",
+      "summary": "Patch v1.3 evaluation and load test preliminary review. Mobile battery usage successfully dropped to 3.8% per hour. Server load test peaked at 42,000 events/sec before thread pool saturation.",
+      "promisesMade": [
+        "We promised horizontal cluster auto-scaling optimization to hit 50,000 events/sec sustained throughput by September 22nd"
+      ],
+      "openQuestions": [
+        "Unresolved: What is the fail-safe behavior if Redis queue memory reaches 90% during massive highway reconnection storms?"
+      ],
+      "sentiment": "neutral",
+      "rawNotes": "Noticeable sigh of relief on the battery improvements. Amara recognized our engineering recovery: \"The mobile side is finally in acceptable shape. Now solve the cloud ingestion ceiling.\"",
+      "actionItems": [
+        "Optimize worker thread pool and connection pooling",
+        "Simulate burst storm load test"
+      ]
+    },
+    {
+      "id": "amara-m6",
+      "contactId": "contact-amara-chen",
+      "date": "2026-09-22",
+      "summary": "50k events/sec throughput validation sync. Auto-scaling cluster successfully sustained 54,000 events/sec with zero dropped messages. Redis memory held stable at 62%.",
+      "promisesMade": [
+        "We promised pilot deployment package for 100 test fleet trucks in Dallas/Fort Worth depot by September 29th",
+        "Amara promised to authorize staging environment hardware access"
+      ],
+      "openQuestions": [
+        "Unresolved: Does Orbit’s depot Wi-Fi network require static egress IP whitelisting?",
+        "Who will be on 24/7 on-call rotation during the October 1st Dallas pilot rollout?"
+      ],
+      "sentiment": "neutral",
+      "rawNotes": "Technical tone improved substantially. Amara acknowledged: \"You hit the target. We appreciate the transparent root-cause analysis on the thread pool.\" Moving into limited depot pilot.",
+      "actionItems": [
+        "Provide static egress IP CIDR blocks",
+        "Establish 24/7 Dallas rollout paging schedule"
+      ]
+    },
+    {
+      "id": "devon-m1",
+      "contactId": "contact-devon-miller",
+      "date": "2026-07-05",
+      "summary": "Discovery call on automating CRM sales hygiene for 150 Account Executives and SDRs across Salesforce and HubSpot hybrid environments.",
+      "promisesMade": [
+        "We promised a reference architecture diagram showing bi-directional synchronization by July 12th",
+        "Devon promised to share their Salesforce custom object schema"
+      ],
+      "openQuestions": [
+        "Can bi-directional CRM syncing operate without triggering cyclical workflow loops in HubSpot automation rules?",
+        "What happens when Salesforce API daily rate limits (100k requests/day) are reached during end-of-month deal rushes?"
+      ],
+      "sentiment": "positive",
+      "rawNotes": "Devon is high energy and focused on sales rep productivity. Stressed that reps waste 4 hours weekly logging call notes manually.",
+      "actionItems": [
+        "Deliver reference architecture diagram",
+        "Review HubSpot webhook deduplication"
+      ]
+    },
+    {
+      "id": "devon-m2",
+      "contactId": "contact-devon-miller",
+      "date": "2026-07-19",
+      "summary": "Architecture diagram review. Devon was satisfied with the loop prevention webhook signature, but pressed hard on Salesforce rate limit exhaustion.",
+      "promisesMade": [
+        "We promised a detailed Salesforce rate limit mitigation spec with batch queuing by August 3rd",
+        "Devon promised to loop in their InfoSec Director Brian for compliance review"
+      ],
+      "openQuestions": [
+        "Recurring unresolved: What happens when Salesforce 100k API rate limits are hit? Does the agent drop updates or queue them with exponential backoff?",
+        "Can billing be prorated quarterly based on active vs inactive SDR licenses?"
+      ],
+      "sentiment": "neutral",
+      "rawNotes": "Devon loves the core feature set but is very cost and risk conscious. Re-iterated that hitting Salesforce API limits breaks their entire finance sync pipeline.",
+      "actionItems": [
+        "Write Salesforce rate limit backoff spec",
+        "Schedule InfoSec review call with Brian"
+      ]
+    },
+    {
+      "id": "devon-m3",
+      "contactId": "contact-devon-miller",
+      "date": "2026-08-03",
+      "summary": "Commercial and pricing review meeting. Devon requested steep volume tiering for 150 seats: $42/seat/month versus our list price of $60/seat/month.",
+      "promisesMade": [
+        "We promised to present a discounted commercial proposal to our CRO and respond by August 10th"
+      ],
+      "openQuestions": [
+        "Recurring unresolved: Can billing be prorated quarterly based on fluctuating SDR turnover (e.g. true-up model)?",
+        "Recurring unresolved: What is the exact delay buffer when Salesforce API rate limits throttle requests?"
+      ],
+      "sentiment": "neutral",
+      "rawNotes": "Tough negotiation. Devon stated: \"Our SDR turnover is 30% annually. We refuse to pay for 150 annual seats upfront if 20 are vacant for three months.\" Pushing hard for true-up billing.",
+      "actionItems": [
+        "Model true-up pricing vs annual prepayment",
+        "Finalize Salesforce queue spec"
+      ]
+    },
+    {
+      "id": "devon-m4",
+      "contactId": "contact-devon-miller",
+      "date": "2026-08-18",
+      "summary": "Commercial counter-proposal review. Our team rejected quarterly true-up billing, offering instead an upfront annual price of $48/seat/month (20% discount). Devon expressed hesitation.",
+      "promisesMade": [
+        "We promised an InfoSec whitepaper on OAuth token encryption and memory retention policies by August 25th"
+      ],
+      "openQuestions": [
+        "Recurring unresolved: Will Devon’s CFO approve annual upfront commitment without a quarterly true-up clause?",
+        "Recurring unresolved: How does Hindsight memory layer store and rotate Salesforce OAuth refresh tokens?"
+      ],
+      "sentiment": "neutral",
+      "rawNotes": "Stalemate on billing terms. Devon warned: \"My CFO will push back hard on full upfront cash. I need the InfoSec paper to at least win the security battle first.\"",
+      "actionItems": [
+        "Draft InfoSec token encryption paper",
+        "Consult finance on 60-day pilot deposit model"
+      ]
+    },
+    {
+      "id": "devon-m5",
+      "contactId": "contact-devon-miller",
+      "date": "2026-09-01",
+      "summary": "Security & InfoSec review with InfoSec Director Brian. Token encryption and zero-knowledge storage in Hindsight memory banks passed security review.",
+      "promisesMade": [
+        "We promised a pilot proposal structure combining a 60-day trial with a refundable milestone deposit by September 10th"
+      ],
+      "openQuestions": [
+        "Recurring unresolved: What exact milestone criteria determines pilot success and deposit refundability?",
+        "Recurring unresolved: Does the agent automatically de-provision seats via Okta SCIM when an SDR is marked inactive in HRIS?"
+      ],
+      "sentiment": "neutral",
+      "rawNotes": "Security approval obtained, which removed a massive hurdle. However, commercial alignment remains stuck between annual prepay and monthly flexibility.",
+      "actionItems": [
+        "Draft Pilot Milestone Agreement with specific KPI targets",
+        "Verify Okta SCIM de-provisioning"
+      ]
+    },
+    {
+      "id": "devon-m6",
+      "contactId": "contact-devon-miller",
+      "date": "2026-09-15",
+      "summary": "Pilot milestone agreement review. Devon reviewed the 60-day pilot proposal with $15k refundable deposit. Expressed concern over KPI definitions for rep adoption.",
+      "promisesMade": [
+        "We promised to adjust adoption KPI from 80% daily active usage to 65% for the first 30 days",
+        "We promised final pilot contract for execution by September 22nd"
+      ],
+      "openQuestions": [
+        "Recurring unresolved: Once the pilot ends, does pricing lock in at $48/seat/month for years 2 and 3?",
+        "Recurring unresolved: Final confirmation on Okta SCIM automatic seat de-provisioning trigger."
+      ],
+      "sentiment": "mixed",
+      "rawNotes": "Productive compromise. Devon noted: \"65% adoption threshold is fair. If the reps love it, the CFO will authorize the full annual expansion without blinking.\"",
+      "actionItems": [
+        "Revise pilot Order Form with 65% adoption clause",
+        "Confirm multi-year price lock policy"
+      ]
+    },
+    {
+      "id": "devon-m7",
+      "contactId": "contact-devon-miller",
+      "date": "2026-09-26",
+      "summary": "Final contract pre-close alignment. Revised pilot agreement presented with 65% adoption milestone, $15k deposit, and 2-year price lock at $48/seat/month.",
+      "promisesMade": [
+        "We promised to initiate sandbox provisioning within 24 hours of signature on Monday Sept 28th",
+        "Devon promised to return signed Pilot Order Form by Tuesday Sept 29th"
+      ],
+      "openQuestions": [
+        "Who will serve as CloudScale’s primary technical champion during the pilot onboarding week?"
+      ],
+      "sentiment": "positive",
+      "rawNotes": "Devon gave verbal approval: \"We have worked through every thorny objection. I am presenting the final order form to our CEO on Monday morning.\" Major deal close imminent.",
+      "actionItems": [
+        "Prepare onboarding sandbox environment",
+        "Schedule kickoff call for Oct 1st"
+      ]
+    },
+    {
+      "id": "debrief-contact-elena-rostova-1790567775274",
+      "contactId": "contact-elena-rostova",
+      "date": "2026-09-28",
+      "summary": "We deescalated the issue, demonstrated latency improvement to 42ms, and secured Elena's agreement to lift the POC freeze while committing to deliver documentation and legal review on specified dates.",
+      "promisesMade": [
+        "[Our Team] Deliver finalized AWS VPC peering architecture documentation (Due: 2026-10-05)",
+        "[Our Team] Schedule General Counsel to review the MSA liability clause (Due: 2026-10-02)",
+        "[Elena Rostova] Send updated sanitized PCI transaction traces (Due: 2026-10-03)"
+      ],
+      "openQuestions": [],
+      "sentiment": "positive",
+      "outcome": "advanced",
+      "rawNotes": "Emergency de-escalation meeting with Elena Rostova. We presented the Datadog staging proxy fix and proved latency is down to 42ms. Elena was visibly relieved and agreed to lift the POC freeze. We committed to deliver the finalized AWS VPC peering architecture documentation by October 5, 2026, and schedule our General Counsel to review the MSA liability clause by October 2. Elena promised to send updated sanitized PCI transaction traces by October 3, 2026.",
+      "createdAt": "2026-09-28T03:56:15.274Z"
+    }
+  ]
+}

@@ -1,0 +1,345 @@
+{
+  "contact": {
+    "id": "contact-elena-rostova",
+    "name": "Elena Rostova",
+    "company": "FinScale Corp",
+    "role": "VP of Engineering",
+    "email": "elena.rostova@finscale.io"
+  },
+  "upcomingAgenda": "Address liability redlines, staging Datadog proxy status, and prevent Confluent migration",
+  "meetingGoal": "De-escalate tension, commit to General Counsel call, and secure 30-day grace period for POC",
+  "stages": [
+    {
+      "stageIndex": 1,
+      "title": "Stage 1: Cold Start",
+      "subtitle": "Zero historical interactions on record",
+      "cutoffDate": "2026-07-08",
+      "meetingThreshold": "Before 1st Meeting (0 past meetings indexed)",
+      "meetingCount": 0,
+      "memoriesRecalledCount": 0,
+      "metrics": {
+        "promisesTracked": 0,
+        "risksIdentified": 0,
+        "openQuestionsFound": 0
+      },
+      "briefing": {
+        "executiveSummary": "Elena Rostova is the Vice President of Engineering at FinScale Corp. The briefing prepares for an introductory technical discussion on enterprise capabilities without historical relationship context.",
+        "relationshipHealth": {
+          "status": "UNKNOWN (NO PRIOR MEETINGS)",
+          "sentimentTrajectory": "No meetings on record before this date.",
+          "trustLevel": "unknown"
+        },
+        "commitments": {
+          "ourPromises": [],
+          "theirPromises": []
+        },
+        "unresolvedQuestions": [],
+        "recommendedApproach": {
+          "advancingTactics": [
+            "No meetings on record before this date."
+          ],
+          "stallingTacticsToAvoid": [
+            "No meetings on record before this date."
+          ],
+          "strategicSummary": "No meetings on record before this date."
+        },
+        "recommendedAgenda": [
+          {
+            "timeframe": "First 5 mins",
+            "topic": "Introductions and meeting objectives",
+            "objective": "Establish rapport and align on discussion scope"
+          },
+          {
+            "timeframe": "10-20 mins",
+            "topic": "Overview of technical requirements",
+            "objective": "Understand high-level architecture priorities"
+          },
+          {
+            "timeframe": "20-35 mins",
+            "topic": "Platform capabilities and governance",
+            "objective": "Demonstrate compliance posture and deployment models"
+          },
+          {
+            "timeframe": "Wrap-up",
+            "topic": "Action items and next steps",
+            "objective": "Identify mutual next milestones"
+          }
+        ],
+        "talkingPointsAndStrategy": [
+          "Standard enterprise introduction focusing on platform resilience and scalability.",
+          "Request details on FinScale transaction volume and compliance standards."
+        ],
+        "redFlagsAndSensitivities": []
+      }
+    },
+    {
+      "stageIndex": 2,
+      "title": "Stage 2: Early Relationship",
+      "subtitle": "Learnings accumulated through 3 technical discovery sessions",
+      "cutoffDate": "2026-08-21",
+      "meetingThreshold": "Before 4th Meeting (3 past meetings indexed)",
+      "meetingCount": 3,
+      "memoriesRecalledCount": 18,
+      "metrics": {
+        "promisesTracked": 2,
+        "risksIdentified": 1,
+        "openQuestionsFound": 2
+      },
+      "briefing": {
+        "executiveSummary": "Initial discovery established good engagement, but batch payload tests revealed latency spikes of 85ms exceeding FinScale's 60ms threshold. The VPC peering demo was delivered 3 days late due to Terraform locks, creating early sensitivity around timeline reliability.",
+        "relationshipHealth": {
+          "status": "HEALTHY",
+          "sentimentTrajectory": "Shifted from enthusiastic initial engagement in July to cautious scrutiny following the 3-day VPC demo delay in early August.",
+          "trustLevel": "moderate"
+        },
+        "commitments": {
+          "ourPromises": [
+            {
+              "promise": "Demonstrate dedicated AWS VPC peering architecture to isolate batch payloads",
+              "dateMade": "2026-07-22",
+              "status": "kept",
+              "impact": "Delivered 3 days late on Aug 7, reducing batch latency to 54ms p99 but testing timeline discipline",
+              "sourceDate": "2026-07-22",
+              "sourceDocumentId": "elena-m2"
+            },
+            {
+              "promise": "Deliver production-ready Datadog audit streaming adapter spec by August 28th",
+              "dateMade": "2026-08-07",
+              "status": "pending",
+              "impact": "Crucial requirement before their October 15 compliance audit deadline",
+              "sourceDate": "2026-08-07",
+              "sourceDocumentId": "elena-m3"
+            }
+          ],
+          "theirPromises": [
+            {
+              "promise": "Share sample sanitized PCI-DSS compliance payloads",
+              "status": "fulfilled",
+              "sourceDate": "2026-07-08",
+              "sourceDocumentId": "elena-m1"
+            }
+          ]
+        },
+        "unresolvedQuestions": [
+          {
+            "question": "Can we stream audit logs directly into Datadog before FinScale's October 15 compliance deadline?",
+            "recurrence": "Open since August 7 meeting",
+            "urgency": "high",
+            "suggestedAnswer": "Confirm adapter spec delivery for August 28 and present interim logging architecture",
+            "sourceDate": "2026-08-07",
+            "sourceDocumentId": "elena-m3"
+          },
+          {
+            "question": "Can the platform deploy in FinScale's isolated AWS eu-central-1 Frankfurt VPC?",
+            "recurrence": "Discussed in July 8 kickoff",
+            "urgency": "medium",
+            "suggestedAnswer": "Reiterate verified isolated VPC compatibility demonstrated in the August 7 peering session",
+            "sourceDate": "2026-07-08",
+            "sourceDocumentId": "elena-m1"
+          }
+        ],
+        "recommendedApproach": {
+          "advancingTactics": [
+            "Demonstrate concrete latency benchmark metrics on real 5MB workloads (moved discussion forward in July)",
+            "Provide transparent architectural diagrams of isolated Frankfurt VPC peering"
+          ],
+          "stallingTacticsToAvoid": [
+            "Missing scheduled milestone delivery dates without prior warning (3-day Terraform delay caused frustration)"
+          ],
+          "strategicSummary": "Rebuild scheduling credibility by confirming that the August 28 Datadog streaming specification remains on track."
+        },
+        "recommendedAgenda": [
+          {
+            "timeframe": "First 5 mins",
+            "topic": "Status recap on VPC peering latency improvements",
+            "objective": "Validate 54ms p99 benchmark in Frankfurt sandbox"
+          },
+          {
+            "timeframe": "10-20 mins",
+            "topic": "Datadog audit streaming spec progress",
+            "objective": "Review draft spec ahead of the August 28 commitment"
+          },
+          {
+            "timeframe": "20-35 mins",
+            "topic": "PCI-DSS audit compliance readiness for October",
+            "objective": "Align on sanitized test payload validation"
+          },
+          {
+            "timeframe": "Wrap-up",
+            "topic": "Next sprint commitments",
+            "objective": "Confirm August 28 deliverables without ambiguity"
+          }
+        ],
+        "talkingPointsAndStrategy": [
+          "Acknowledge the 3-day demo delay openly and show how infrastructure provisioning has been automated to prevent future slippage.",
+          "Present preliminary Datadog streaming architecture to demonstrate proactive progress ahead of the August 28 date."
+        ],
+        "redFlagsAndSensitivities": [
+          {
+            "text": "Core trading engine cannot tolerate batch latency spikes above 60ms; 85ms spikes generated severe architect skepticism",
+            "sourceDate": "2026-07-22",
+            "sourceDocumentId": "elena-m2"
+          }
+        ]
+      }
+    },
+    {
+      "stageIndex": 3,
+      "title": "Stage 3: Deep History & Crisis",
+      "subtitle": "Full context across 6 meetings, broken promises, and churn escalation",
+      "cutoffDate": "2026-09-25",
+      "meetingThreshold": "Before 7th Meeting (6 past meetings indexed)",
+      "meetingCount": 6,
+      "memoriesRecalledCount": 68,
+      "metrics": {
+        "promisesTracked": 5,
+        "risksIdentified": 3,
+        "openQuestionsFound": 3
+      },
+      "briefing": {
+        "executiveSummary": "The account is in severe crisis. Product rejected the custom Datadog adapter for Q3 after we committed to confirm prioritization, and the executive escalation call with our CTO was missed. In response, Elena disclosed that FinScale is actively evaluating Confluent Cloud as a replacement and has placed the pilot on freeze.",
+        "relationshipHealth": {
+          "status": "AT_RISK",
+          "sentimentTrajectory": "Deteriorated sharply from neutral in August to openly hostile in mid-September following repeated missed milestones and MSA redline delays.",
+          "trustLevel": "fragile"
+        },
+        "commitments": {
+          "ourPromises": [
+            {
+              "promise": "Confirm executive product prioritization for the Datadog adapter by August 28th",
+              "dateMade": "2026-08-21",
+              "status": "broken",
+              "impact": "Product team rejected the adapter for Q3; this second missed milestone severely compromised trust",
+              "sourceDate": "2026-08-21",
+              "sourceDocumentId": "elena-m4"
+            },
+            {
+              "promise": "Conduct executive escalation call with CTO and Head of Engineering by September 10th",
+              "dateMade": "2026-09-04",
+              "status": "broken",
+              "impact": "Call was not executed, leading Elena to feel abandoned by our leadership",
+              "sourceDate": "2026-09-04",
+              "sourceDocumentId": "elena-m5"
+            },
+            {
+              "promise": "Return legal redlines on FinScale's Master Services Agreement within 5 business days",
+              "dateMade": "2026-09-18",
+              "status": "pending",
+              "impact": "September 23 deadline passed without redlines; FinScale legal issued an ultimatum",
+              "sourceDate": "2026-09-18",
+              "sourceDocumentId": "elena-m6"
+            },
+            {
+              "promise": "Provide temporary workaround proxy for Datadog streaming at zero additional cost",
+              "dateMade": "2026-09-18",
+              "status": "in_progress",
+              "impact": "Crucial technical bridge to keep the POC alive while full adapter is planned",
+              "sourceDate": "2026-09-18",
+              "sourceDocumentId": "elena-m6"
+            },
+            {
+              "promise": "Demonstrate dedicated AWS VPC peering architecture to isolate batch payloads",
+              "dateMade": "2026-07-22",
+              "status": "kept",
+              "impact": "Historical proof that latency problems can be resolved when team focuses",
+              "sourceDate": "2026-07-22",
+              "sourceDocumentId": "elena-m2"
+            }
+          ],
+          "theirPromises": [
+            {
+              "promise": "Return redlines on FinScale's Master Services Agreement",
+              "status": "pending",
+              "sourceDate": "2026-09-18",
+              "sourceDocumentId": "elena-m6"
+            }
+          ]
+        },
+        "unresolvedQuestions": [
+          {
+            "question": "Will FinScale terminate the POC and migrate to Confluent Cloud before October 1?",
+            "recurrence": "Raised during tense September 18 executive sync",
+            "urgency": "high",
+            "suggestedAnswer": "Present working Datadog staging proxy immediately and request a 30-day grace period",
+            "sourceDate": "2026-09-18",
+            "sourceDocumentId": "elena-m6"
+          },
+          {
+            "question": "Can our legal team accept FinScale's uncapped liability clause on data breaches?",
+            "recurrence": "Pending in MSA review since September 18",
+            "urgency": "high",
+            "suggestedAnswer": "Offer a direct call between our General Counsel and FinScale legal on Monday Sept 28",
+            "sourceDate": "2026-09-18",
+            "sourceDocumentId": "elena-m6"
+          },
+          {
+            "question": "Is Datadog audit streaming a mandatory hard prerequisite for signing the $180k ARR contract?",
+            "recurrence": "Reiterated across August 21 and September 18 meetings",
+            "urgency": "high",
+            "suggestedAnswer": "Treat as non-negotiable: prove that the temporary proxy satisfies real-time SIEM logging",
+            "sourceDate": "2026-08-21",
+            "sourceDocumentId": "elena-m4"
+          }
+        ],
+        "recommendedApproach": {
+          "advancingTactics": [
+            "Demonstrate concrete technical artifacts immediately (staging Datadog proxy) rather than promising future roadmaps",
+            "Schedule direct General Counsel sync to remove legal deadlocks",
+            "Acknowledge past missed milestone dates proactively without excuses"
+          ],
+          "stallingTacticsToAvoid": [
+            "Overpromising delivery dates that require unapproved product roadmaps (August 28 adapter commitment)",
+            "Letting legal redlines sit without direct attorney-to-attorney dialogue",
+            "Minimizing FinScale's parallel evaluation of Confluent Cloud"
+          ],
+          "strategicSummary": "Do not attempt to defend past delays. Focus entirely on de-escalation: demonstrate the live staging Datadog proxy container, lock in a date for our General Counsel to speak directly with FinScale legal, and secure a written 30-day grace period."
+        },
+        "recommendedAgenda": [
+          {
+            "timeframe": "First 5 mins",
+            "topic": "De-escalation and live Datadog proxy demonstration",
+            "objective": "Prove working 42ms proxy in staging to lift the technical POC freeze"
+          },
+          {
+            "timeframe": "10-20 mins",
+            "topic": "General Counsel call scheduling for MSA redlines",
+            "objective": "Lock in Monday Sept 28 attorney sync to resolve uncapped liability clause"
+          },
+          {
+            "timeframe": "20-35 mins",
+            "topic": "30-day POC grace period agreement",
+            "objective": "Formalize pause on Confluent Cloud migration during grace period"
+          },
+          {
+            "timeframe": "Wrap-up",
+            "topic": "Written recap and executive sign-off",
+            "objective": "Deliver summary within 2 hours of call conclusion"
+          }
+        ],
+        "talkingPointsAndStrategy": [
+          "We take full accountability for the missed August 28 prioritization date and the delayed escalation call.",
+          "Our engineering team has built and deployed the temporary Datadog proxy container at zero cost to ensure compliance flows are never interrupted.",
+          "We propose our General Counsel speaks directly with your procurement counsel this Monday to finalize the MSA."
+        ],
+        "redFlagsAndSensitivities": [
+          {
+            "text": "Active parallel evaluation of Confluent Cloud with native AWS event streaming",
+            "sourceDate": "2026-09-18",
+            "sourceDocumentId": "elena-m6"
+          },
+          {
+            "text": "Uncapped liability clause dispute stalling Master Services Agreement execution",
+            "sourceDate": "2026-09-18",
+            "sourceDocumentId": "elena-m6"
+          },
+          {
+            "text": "VP of Risk mandate: pilot will be terminated if Datadog streaming is not active before October 1",
+            "sourceDate": "2026-08-21",
+            "sourceDocumentId": "elena-m4"
+          }
+        ]
+      }
+    }
+  ],
+  "generatedAt": "2026-09-28T09:40:00.000Z"
+}
