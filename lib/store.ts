@@ -60,3 +60,27 @@ export function addMeetingNote(note: MeetingNote): MeetingNote {
   saveAppData(data);
   return note;
 }
+
+export function upsertMeetingNote(note: MeetingNote): MeetingNote {
+  const data = getAppData();
+  const existingIdx = data.meetings.findIndex((m) => m.id === note.id);
+  if (existingIdx !== -1) {
+    data.meetings[existingIdx] = note;
+  } else {
+    data.meetings.push(note);
+  }
+  saveAppData(data);
+  return note;
+}
+
+export function deleteMeetingNote(id: string): boolean {
+  const data = getAppData();
+  const initialLength = data.meetings.length;
+  data.meetings = data.meetings.filter((m) => m.id !== id);
+  if (data.meetings.length !== initialLength) {
+    saveAppData(data);
+    return true;
+  }
+  return false;
+}
+

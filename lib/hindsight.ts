@@ -175,15 +175,32 @@ export interface ReflectOptions {
   context?: string;
   budget?: 'low' | 'mid' | 'high';
   tags?: string[];
+  includeFacts?: boolean;
+}
+
+export interface ReflectMemoryEvidence {
+  id: string;
+  text: string;
+  type?: string;
+  occurred_start?: string | null;
+  occurred_end?: string | null;
+  mentioned_at?: string | null;
+  document_id?: string | null;
+  metadata?: Record<string, unknown> | null;
+  tags?: string[];
 }
 
 export interface ReflectResult {
   text: string;
+  basedOn?: {
+    memories?: ReflectMemoryEvidence[];
+  } | null;
   rawResponse?: unknown;
 }
 
 /**
- * Reflects and synthesizes patterns across memories using Hindsight's agentic reflect operation
+ * Reflects and synthesizes patterns across memories using Hindsight's agentic reflect operation.
+ * Retries up to 2 attempts. If reflect fails or returns unusable results, reports status cleanly.
  */
 export async function reflect(
   query: string,
@@ -196,23 +213,41 @@ export async function reflect(
     tags.push(`contact:${options.contactId}`);
   }
 
-  try {
-    const response = await client.reflect(bankId, query, {
-      budget: options?.budget || 'low',
-      context: options?.context,
-      tags: tags.length > 0 ? tags : undefined,
-    });
-    return {
-      text: response.text || '',
-      rawResponse: response,
-    };
-  } catch (error: unknown) {
-    const err = error as Error;
-    console.warn(`[Hindsight reflect warning in bank "${bankId}"]:`, err?.message || error);
-    return {
-      text: '',
-      rawResponse: null,
-    };
+  const maxAttempts = 2;
+  let lastError: Error | null = null;
+
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    try {
+      console.log(`[Hindsight reflect] Attempt ${attempt}/${maxAttempts} for bank "${bankId}"...`);
+      const response = await client.reflect(bankId, query, {
+        budget: options?.budget || 'low',
+        context: options?.context,
+        tags: tags.length > 0 ? tags : undefined,
+        includeFacts: options?.includeFacts ?? true,
+      });
+
+      console.log(`[Hindsight reflect] Raw response (attempt ${attempt}): text length=${response?.text?.length || 0}`);
+
+      if (response && typeof response.text === 'string' && response.text.trim().length > 0) {
+        return {
+          text: response.text,
+          basedOn: (response as any).based_on || null,
+          rawResponse: response,
+        };
+      }
+
+      console.warn(`[Hindsight reflect] Attempt ${attempt} returned empty or invalid text in response:`, response);
+    } catch (error: unknown) {
+      lastError = error as Error;
+      console.warn(`[Hindsight reflect warning - attempt ${attempt}/${maxAttempts} in bank "${bankId}"]:`, lastError?.message || error);
+    }
   }
+
+  console.warn(`[Hindsight reflect] Unusable after ${maxAttempts} attempts. Returning empty text so fallback synthesizer can take over.`);
+  return {
+    text: '',
+    basedOn: null,
+    rawResponse: lastError ? { error: lastError.message, name: lastError.name } : null,
+  };
 }
 

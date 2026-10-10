@@ -126,7 +126,41 @@ export interface MeetingBriefing {
   recommendedAgenda: string[];
   detectedSensitivities: string[];
   relevantMemories: MemoryFact[];
+  learnedInsights?: LearnedInsights;
   generatedAt: string;
+}
+
+export interface LearnedInsightItem {
+  insight: string;
+  sourceDate?: string | null;
+  sourceDocumentId?: string | null;
+  meetingTitle?: string | null;
+}
+
+export interface LearnedTacticItem {
+  tactic: string;
+  sourceDate?: string | null;
+  sourceDocumentId?: string | null;
+  meetingTitle?: string | null;
+}
+
+export interface LearnedPreferenceItem {
+  preference: string;
+  sourceDate?: string | null;
+  sourceDocumentId?: string | null;
+  meetingTitle?: string | null;
+}
+
+export interface LearnedInsights {
+  provenance: 'Inferred by Hindsight' | 'Synthesized from recalled memories';
+  trustTurningPoints: LearnedInsightItem[];
+  tactics: {
+    advancing: LearnedTacticItem[];
+    stalling: LearnedTacticItem[];
+  };
+  communicationPreferences: LearnedPreferenceItem[];
+  rawSynthesisText?: string;
+  basedOnCount?: number;
 }
 
 export interface LearningCurveMetrics {

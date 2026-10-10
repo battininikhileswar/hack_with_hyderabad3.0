@@ -1,0 +1,16 @@
+Elena Rostova (VP of Engineering, FinScale Corp) & Alex Mercer (Solutions Architect)
+Meeting Date: October 9, 2026
+
+Alex Mercer: Elena, great catching up again. Thanks for taking the time ahead of your Q4 planning cycle.
+Elena Rostova: Good to see you Alex. Let's get right into it. Last week's demo of the streaming telemetry proxy was promising, but we still have two critical hurdles before we can clear the POC for general production rollout.
+Alex Mercer: Understood. Let's address those head-on.
+Elena Rostova: First, our security audit team requires mutual TLS validation for all inter-service mesh calls between our Frankfurt VPC and your ingestion cluster. We need that documentation and sample Terraform module by October 18, 2026.
+Alex Mercer: We can commit to that. Our infrastructure team will deliver the mTLS configuration guide and reference Terraform scripts by October 18th.
+Elena Rostova: Perfect. Second is SLA guarantees during peak trading hours. We need 99.99% uptime with p99 latency under 45ms.
+Alex Mercer: We've stress-tested 50k transactions per second at 38ms p99. I will send over the certified benchmark report by October 14, 2026.
+Elena Rostova: That would give the risk committee huge confidence. On our side, I will personally review the updated Master Services Agreement with our General Counsel and return the marked-up liability clauses by October 21, 2026.
+Alex Mercer: That will keep us right on track for our November deployment target.
+Elena Rostova: One open question: how does your disaster recovery failover behave if AWS eu-central-1 experiences a multi-AZ outage? We need clarity on cross-region replication lag.
+Alex Mercer: Good question. I will consult our storage reliability engineers and get you a definitive answer on cross-region failover RPO and RTO by our next touchpoint.
+Elena Rostova: Overall this has been a very productive discussion. The progress over the last two months has rebuilt a lot of trust with our steering committee.
+Alex Mercer: Excellent. Let's lock in October 23 for our final sign-off sync.

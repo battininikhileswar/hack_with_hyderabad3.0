@@ -1,0 +1,35 @@
+{
+  "contact-elena-rostova": {
+    "contactId": "contact-elena-rostova",
+    "contactName": "Elena Rostova",
+    "company": "FinScale Corp",
+    "relationshipStatus": "at_risk",
+    "topRisk": "FinScale CTO evaluating Confluent Kafka alternative due to missed VPC peering and mutual TLS requirements ahead of Q4 freeze.",
+    "executiveSummary": "FinScale POC freeze was temporarily lifted following Datadog proxy demonstration, but trust remains guarded. Strict delivery of mutual TLS architecture and General Counsel liability alignment are required.",
+    "sentimentTrajectory": "Cautious Recovery",
+    "trustLevel": "fragile",
+    "cachedAt": "2026-10-10T15:00:00.000Z"
+  },
+  "contact-marcus-vance": {
+    "contactId": "contact-marcus-vance",
+    "contactName": "Marcus Vance",
+    "company": "HealthBridge Health",
+    "relationshipStatus": "expanding",
+    "topRisk": "Upcoming clinician onboarding surge requiring predictive license alerting before the joint customer summit keynote.",
+    "executiveSummary": "Recently signed $92,000 ARR Enterprise expansion after successful BAA execution. Marcus is an executive champion aligning on Q4 enterprise contract rollout.",
+    "sentimentTrajectory": "Strongly Positive",
+    "trustLevel": "high",
+    "cachedAt": "2026-10-10T15:00:00.000Z"
+  },
+  "contact-amara-chen": {
+    "contactId": "contact-amara-chen",
+    "contactName": "Amara Chen",
+    "company": "Orbit Logistics",
+    "relationshipStatus": "fragile",
+    "topRisk": "Dallas 100-truck depot rollout readiness contingent on static egress IP whitelisting and battery drain stabilization.",
+    "executiveSummary": "Account in recovery after prior mobile SDK delays. 50k events/second throughput test succeeded, but depot deployment requires static egress IP configuration and 24/7 on-call escalation.",
+    "sentimentTrajectory": "Recovering",
+    "trustLevel": "guarded",
+    "cachedAt": "2026-10-10T15:00:00.000Z"
+  }
+}

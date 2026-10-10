@@ -16,6 +16,12 @@ export default function LandingPage() {
 
           <div className="flex items-center gap-3">
             <Link
+              href="/today"
+              className="px-4 py-2 text-xs font-semibold clay-btn-secondary"
+            >
+              Today
+            </Link>
+            <Link
               href="/overview"
               className="px-4 py-2 text-xs font-semibold clay-btn-secondary"
             >

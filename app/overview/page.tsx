@@ -184,6 +184,13 @@ export default function PortfolioOverviewPage() {
             </div>
 
             <Link
+              href="/today"
+              className="px-3.5 py-1.5 text-xs font-semibold clay-btn-secondary"
+            >
+              Today
+            </Link>
+
+            <Link
               href="/app"
               className="px-3.5 py-1.5 text-xs font-semibold clay-btn-primary"
             >

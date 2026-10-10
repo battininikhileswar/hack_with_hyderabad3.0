@@ -52,6 +52,37 @@ interface DetailedBriefing {
     sourceDate?: string;
     sourceDocumentId?: string;
   }>;
+  learnedInsights?: {
+    provenance: 'Inferred by Hindsight' | 'Synthesized from recalled memories';
+    trustTurningPoints: Array<{
+      insight: string;
+      sourceDate?: string | null;
+      sourceDocumentId?: string | null;
+      meetingTitle?: string | null;
+    }>;
+    tactics: {
+      advancing: Array<{
+        tactic: string;
+        sourceDate?: string | null;
+        sourceDocumentId?: string | null;
+        meetingTitle?: string | null;
+      }>;
+      stalling: Array<{
+        tactic: string;
+        sourceDate?: string | null;
+        sourceDocumentId?: string | null;
+        meetingTitle?: string | null;
+      }>;
+    };
+    communicationPreferences: Array<{
+      preference: string;
+      sourceDate?: string | null;
+      sourceDocumentId?: string | null;
+      meetingTitle?: string | null;
+    }>;
+    rawSynthesisText?: string;
+    basedOnCount?: number;
+  };
 }
 
 export default function MeetingPrepDashboard() {
@@ -109,6 +140,7 @@ export default function MeetingPrepDashboard() {
 
   const [briefingWithMemory, setBriefingWithMemory] = useState<DetailedBriefing | null>(null);
   const [briefingWithoutMemory, setBriefingWithoutMemory] = useState<DetailedBriefing | null>(null);
+  const [insightsProvenance, setInsightsProvenance] = useState<string | null>(null);
   const [recalledMemories, setRecalledMemories] = useState<MemoryFact[]>([]);
   const [copied, setCopied] = useState(false);
   const [showMemories, setShowMemories] = useState(false);
@@ -141,6 +173,30 @@ export default function MeetingPrepDashboard() {
   const [debriefNotes, setDebriefNotes] = useState('');
   const [isSubmittingDebrief, setIsSubmittingDebrief] = useState(false);
   const [debriefResult, setDebriefResult] = useState<DebriefResult | null>(null);
+
+  // Import Meeting Flow State
+  const [showImportModal, setShowImportModal] = useState(false);
+  const [importContactId, setImportContactId] = useState('');
+  const [importDate, setImportDate] = useState(new Date().toISOString().slice(0, 10));
+  const [importMode, setImportMode] = useState<'text' | 'audio'>('text');
+  const [importTranscript, setImportTranscript] = useState('');
+  const [importAudioFile, setImportAudioFile] = useState<File | null>(null);
+  const [isExtractingImport, setIsExtractingImport] = useState(false);
+  const [importExtractError, setImportExtractError] = useState<string | null>(null);
+  const [importStep, setImportStep] = useState<'input' | 'review' | 'success'>('input');
+  const [extractedImportData, setExtractedImportData] = useState<{
+    summary: string;
+    sentiment: string;
+    outcome: MeetingOutcome;
+    promises: Array<{ promise: string; owner: string; dueDate: string | null; status: string }>;
+    openQuestions: string[];
+    transcript: string;
+  } | null>(null);
+  const [isSavingImport, setIsSavingImport] = useState(false);
+  const [importSaveResult, setImportSaveResult] = useState<{
+    retainedPromisesCount: number;
+    documentId?: string;
+  } | null>(null);
 
   // New Note Form
   const [newNoteDate, setNewNoteDate] = useState(new Date().toISOString().slice(0, 10));
@@ -355,10 +411,32 @@ export default function MeetingPrepDashboard() {
           if (resWith?.briefing) {
             setBriefingWithMemory(resWith.briefing);
             setRecalledMemories(resWith.relevantMemories || []);
+            setInsightsProvenance(resWith.insightsProvenance || null);
           }
           if (resWithout?.briefing) {
             setBriefingWithoutMemory(resWithout.briefing);
           }
+        } finally {
+          setIsGenerating(false);
+        }
+      })();
+    }
+  }, [selectedContact]);
+
+  // Auto-run briefing on load if arrived from Today page with ?autoBriefing=true
+  useEffect(() => {
+    if (typeof window !== 'undefined' && selectedContact && window.location.search.includes('autoBriefing=true') && !window.location.search.includes('compare=true')) {
+      (async () => {
+        setIsGenerating(true);
+        try {
+          const resWith = await generateSingleBriefing(true);
+          if (resWith?.briefing) {
+            setBriefingWithMemory(resWith.briefing);
+            setRecalledMemories(resWith.relevantMemories || []);
+            setInsightsProvenance(resWith.insightsProvenance || null);
+          }
+        } catch (e) {
+          console.error('Failed to auto-generate briefing:', e);
         } finally {
           setIsGenerating(false);
         }
@@ -415,6 +493,7 @@ export default function MeetingPrepDashboard() {
         if (resWith?.briefing) {
           setBriefingWithMemory(resWith.briefing);
           setRecalledMemories(resWith.relevantMemories || []);
+          setInsightsProvenance(resWith.insightsProvenance || null);
         }
         if (resWithout?.briefing) {
           setBriefingWithoutMemory(resWithout.briefing);
@@ -425,6 +504,7 @@ export default function MeetingPrepDashboard() {
           if (memMode) {
             setBriefingWithMemory(data.briefing);
             setRecalledMemories(data.relevantMemories || []);
+            setInsightsProvenance(data.insightsProvenance || null);
           } else {
             setBriefingWithoutMemory(data.briefing);
           }
@@ -592,6 +672,129 @@ export default function MeetingPrepDashboard() {
       setDebriefError('Network error connecting to post-meeting debrief service.');
     } finally {
       setIsSubmittingDebrief(false);
+    }
+  };
+
+  // Import Meeting Handlers
+  const openImportModal = () => {
+    setImportContactId(selectedContact ? selectedContact.id : (contacts[0]?.id || ''));
+    setImportDate(new Date().toISOString().slice(0, 10));
+    setImportMode('text');
+    setImportTranscript('');
+    setImportAudioFile(null);
+    setImportExtractError(null);
+    setExtractedImportData(null);
+    setImportSaveResult(null);
+    setImportStep('input');
+    setShowImportModal(true);
+  };
+
+  const handleStartExtractImport = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!importContactId) {
+      setImportExtractError('Please select a contact.');
+      return;
+    }
+
+    if (importMode === 'text' && !importTranscript.trim()) {
+      setImportExtractError('Please enter or paste a meeting transcript.');
+      return;
+    }
+
+    if (importMode === 'audio' && !importAudioFile) {
+      setImportExtractError('Please select an audio file to transcribe.');
+      return;
+    }
+
+    setIsExtractingImport(true);
+    setImportExtractError(null);
+
+    try {
+      let res: Response;
+      if (importMode === 'audio' && importAudioFile) {
+        const formData = new FormData();
+        formData.append('contactId', importContactId);
+        formData.append('date', importDate);
+        formData.append('audio', importAudioFile);
+        res = await fetch('/api/import/extract', {
+          method: 'POST',
+          body: formData,
+        });
+      } else {
+        res = await fetch('/api/import/extract', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            contactId: importContactId,
+            date: importDate,
+            transcript: importTranscript,
+          }),
+        });
+      }
+
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        setImportExtractError(data.error || 'Failed to extract meeting from transcript.');
+      } else {
+        setExtractedImportData({
+          summary: data.extracted.summary,
+          sentiment: data.extracted.sentiment,
+          outcome: data.extracted.outcome,
+          promises: data.extracted.promises || [],
+          openQuestions: data.extracted.openQuestions || [],
+          transcript: data.transcript || importTranscript,
+        });
+        setImportStep('review');
+      }
+    } catch (err) {
+      console.error('[Import Flow] Extract error:', err);
+      setImportExtractError('Network error connecting to extraction service.');
+    } finally {
+      setIsExtractingImport(false);
+    }
+  };
+
+  const handleSaveImportedMeeting = async () => {
+    if (!extractedImportData || !importContactId) return;
+
+    setIsSavingImport(true);
+    setImportExtractError(null);
+
+    try {
+      const res = await fetch('/api/import/save', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contactId: importContactId,
+          date: importDate,
+          summary: extractedImportData.summary,
+          sentiment: extractedImportData.sentiment,
+          outcome: extractedImportData.outcome,
+          promises: extractedImportData.promises,
+          openQuestions: extractedImportData.openQuestions,
+          transcript: extractedImportData.transcript,
+        }),
+      });
+
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        setImportExtractError(data.error || 'Failed to retain meeting in Hindsight.');
+      } else {
+        setImportSaveResult({
+          retainedPromisesCount: data.retainedPromisesCount,
+          documentId: data.retainedMainMemory?.documentId,
+        });
+        setImportStep('success');
+        fetchContacts();
+        if (selectedContact && selectedContact.id === importContactId) {
+          selectContact(selectedContact);
+        }
+      }
+    } catch (err) {
+      console.error('[Import Flow] Save error:', err);
+      setImportExtractError('Network error connecting to save service.');
+    } finally {
+      setIsSavingImport(false);
     }
   };
 
@@ -1040,8 +1243,12 @@ ${redFlagsText}
               Recommended Tactical Approach
             </span>
             {isMemory && (
-              <span className="px-2 py-0.5 text-xs font-semibold bg-[#dfe7e1] text-[#436b4d] rounded-[12px] border border-[#bcd4c0] uppercase">
-                Hindsight Reflect Synthesis
+              <span className={`px-2 py-0.5 text-xs font-semibold rounded-[12px] border uppercase ${
+                insightsProvenance === 'Inferred by Hindsight'
+                  ? 'bg-[#dfe7e1] text-[#436b4d] border-[#bcd4c0]'
+                  : 'bg-[#e2e7ec] text-[#2c4e6f] border-[#b0c4de]'
+              }`}>
+                {insightsProvenance || 'Synthesized from recalled memories'}
               </span>
             )}
           </div>
@@ -1156,6 +1363,171 @@ ${redFlagsText}
             </div>
           )}
         </div>
+
+        {/* Learned Insights Section (generated with reflect scoped to contact) */}
+        {isMemory && b.learnedInsights && (
+          <div className="p-4 rounded-[20px] bg-[#f7f3ec] border border-[#ded7ca] space-y-3.5 shadow-xs">
+            <div className="flex items-center justify-between flex-wrap gap-2 pb-2.5 border-b border-[#ded7ca]">
+              <div className="flex items-center gap-2">
+                <span className="w-2.5 h-2.5 rounded-full bg-[#7a488a]" />
+                <h4 className="font-heading font-bold text-sm text-[#2a2622]">
+                  Learned Insights
+                </h4>
+              </div>
+              <span
+                className={`px-2.5 py-0.5 rounded-full text-[11px] font-semibold border ${
+                  b.learnedInsights.provenance === 'Inferred by Hindsight'
+                    ? 'bg-[#f4ebf8] text-[#7a488a] border-[#e2cbe8]'
+                    : 'bg-[#fef9e7] text-[#a37000] border-[#fdeaa8]'
+                }`}
+              >
+                {b.learnedInsights.provenance}
+              </span>
+            </div>
+
+            {/* 1. Trust Turning Points */}
+            <div className="space-y-1.5">
+              <span className="text-[11px] font-bold uppercase tracking-wider text-[#633b6d] block">
+                Trust Turning Points
+              </span>
+              {b.learnedInsights.trustTurningPoints && b.learnedInsights.trustTurningPoints.length > 0 ? (
+                <div className="space-y-1.5">
+                  {b.learnedInsights.trustTurningPoints.map((item, idx) => (
+                    <div key={idx} className="p-2.5 rounded-[14px] bg-[#eee8dc] border border-[#ded7ca] text-xs">
+                      <p className="text-[#2a2622] font-medium leading-relaxed">{item.insight}</p>
+                      {item.sourceDate && (
+                        <div className="mt-1">
+                          <button
+                            type="button"
+                            onClick={() => handleOpenMeeting(item.sourceDate || undefined, item.sourceDocumentId || undefined)}
+                            className="inline-flex items-center gap-1 text-[11px] font-semibold text-[#b8623f] hover:underline cursor-pointer"
+                          >
+                            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                            </svg>
+                            <span>Supporting Meeting: {formatMeetingDate(item.sourceDate)}</span>
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-xs text-[#7d7265] italic">No specific trust inflection points identified.</p>
+              )}
+            </div>
+
+            {/* 2. Tactics: Advancing vs. Stalled Meetings */}
+            <div className="space-y-2 pt-1">
+              <span className="text-[11px] font-bold uppercase tracking-wider text-[#436b4d] block">
+                Tactics: Advancing vs. Stalled
+              </span>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5">
+                {/* Advancing Tactics */}
+                <div className="p-2.5 rounded-[14px] bg-[#eef6f0] border border-[#cbe2ce] space-y-1.5">
+                  <span className="text-[11px] font-bold text-[#2e7d32] flex items-center gap-1">
+                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    </svg>
+                    Tactics That Advanced Meetings
+                  </span>
+                  {b.learnedInsights.tactics?.advancing && b.learnedInsights.tactics.advancing.length > 0 ? (
+                    <ul className="space-y-1 text-xs text-[#204a25]">
+                      {b.learnedInsights.tactics.advancing.map((item, idx) => (
+                        <li key={idx} className="flex flex-col gap-0.5">
+                          <div className="flex items-start gap-1.5">
+                            <span className="font-bold shrink-0">•</span>
+                            <span>{item.tactic}</span>
+                          </div>
+                          {item.sourceDate && (
+                            <div className="ml-3">
+                              <button
+                                type="button"
+                                onClick={() => handleOpenMeeting(item.sourceDate || undefined, item.sourceDocumentId || undefined)}
+                                className="inline-flex items-center gap-1 text-[11px] font-medium text-[#2e7d32] underline hover:text-[#1b5e20] cursor-pointer"
+                              >
+                                Source: {formatMeetingDate(item.sourceDate)}
+                              </button>
+                            </div>
+                          )}
+                        </li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <p className="text-[11px] text-[#7d7265] italic">No specific advancing tactics recorded.</p>
+                  )}
+                </div>
+
+                {/* Stalling Tactics / Pitfalls to Avoid */}
+                <div className="p-2.5 rounded-[14px] bg-[#fdf5e8] border border-[#f5ddb5] space-y-1.5">
+                  <span className="text-[11px] font-bold text-[#b45309] flex items-center gap-1">
+                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                    </svg>
+                    Stalled Meetings &amp; Pitfalls
+                  </span>
+                  {b.learnedInsights.tactics?.stalling && b.learnedInsights.tactics.stalling.length > 0 ? (
+                    <ul className="space-y-1 text-xs text-[#78350f]">
+                      {b.learnedInsights.tactics.stalling.map((item, idx) => (
+                        <li key={idx} className="flex flex-col gap-0.5">
+                          <div className="flex items-start gap-1.5">
+                            <span className="font-bold shrink-0">•</span>
+                            <span>{item.tactic}</span>
+                          </div>
+                          {item.sourceDate && (
+                            <div className="ml-3">
+                              <button
+                                type="button"
+                                onClick={() => handleOpenMeeting(item.sourceDate || undefined, item.sourceDocumentId || undefined)}
+                                className="inline-flex items-center gap-1 text-[11px] font-medium text-[#b45309] underline hover:text-[#78350f] cursor-pointer"
+                              >
+                                Source: {formatMeetingDate(item.sourceDate)}
+                              </button>
+                            </div>
+                          )}
+                        </li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <p className="text-[11px] text-[#7d7265] italic">No stalled tactics observed.</p>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* 3. Communication Preferences */}
+            <div className="space-y-1.5 pt-1">
+              <span className="text-[11px] font-bold uppercase tracking-wider text-[#b8623f] block">
+                Communication Preferences
+              </span>
+              {b.learnedInsights.communicationPreferences && b.learnedInsights.communicationPreferences.length > 0 ? (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  {b.learnedInsights.communicationPreferences.map((item, idx) => (
+                    <div key={idx} className="p-2.5 rounded-[14px] bg-[#eee8dc] border border-[#ded7ca] text-xs">
+                      <div className="flex items-start gap-1.5">
+                        <span className="text-[#b8623f] font-bold shrink-0">💬</span>
+                        <span className="font-medium text-[#2a2622]">{item.preference}</span>
+                      </div>
+                      {item.sourceDate && (
+                        <div className="mt-1 ml-5">
+                          <button
+                            type="button"
+                            onClick={() => handleOpenMeeting(item.sourceDate || undefined, item.sourceDocumentId || undefined)}
+                            className="inline-flex items-center gap-1 text-[11px] font-semibold text-[#b8623f] hover:underline cursor-pointer"
+                          >
+                            Source: {formatMeetingDate(item.sourceDate)}
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-xs text-[#7d7265] italic">No communication preferences established yet.</p>
+              )}
+            </div>
+          </div>
+        )}
       </div>
     );
   };
@@ -1575,6 +1947,13 @@ ${redFlagsText}
             </div>
 
             <Link
+              href="/today"
+              className="px-3 py-1.5 text-xs font-medium clay-btn-secondary"
+            >
+              Today
+            </Link>
+
+            <Link
               href="/overview"
               className="px-3 py-1.5 text-xs font-medium clay-btn-secondary"
             >
@@ -1697,6 +2076,13 @@ ${redFlagsText}
                 </div>
 
                 <div className="flex flex-wrap items-center gap-3">
+                  <button
+                    onClick={openImportModal}
+                    className="px-3.5 py-1.5 text-xs font-semibold clay-btn-secondary"
+                  >
+                    Import Meeting
+                  </button>
+
                   <button
                     onClick={() => {
                       setDebriefResult(null);
@@ -2023,6 +2409,12 @@ ${redFlagsText}
                       </p>
                     </div>
                     <div className="flex items-center gap-2">
+                      <button
+                        onClick={openImportModal}
+                        className="px-3.5 py-1.5 text-xs font-semibold clay-btn-secondary"
+                      >
+                        Import Meeting
+                      </button>
                       <button
                         onClick={() => {
                           setDebriefResult(null);
@@ -3027,6 +3419,538 @@ ${redFlagsText}
                       if (debriefResult.meetingNote?.date) {
                         setHighlightedDate(debriefResult.meetingNote.date);
                       }
+                    }}
+                    className="px-4 py-1.5 text-xs font-semibold clay-btn-primary"
+                  >
+                    View in Timeline
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Modal: Import Meeting (Transcript or Audio via Groq Whisper + Review & Retain) */}
+      {showImportModal && (
+        <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-4 overflow-y-auto">
+          <div className="clay-card max-w-2xl w-full p-6 flex flex-col gap-4 max-h-[90vh] overflow-y-auto">
+            {/* Modal Header */}
+            <div className="flex items-center justify-between border-b border-[#ded7ca] pb-3">
+              <div>
+                <h3 className="font-heading font-bold text-base text-[#2a2622]">
+                  {importStep === 'input' && 'Import Meeting Transcript / Audio'}
+                  {importStep === 'review' && 'Review & Edit Structured Meeting Note'}
+                  {importStep === 'success' && 'Meeting Retained into Hindsight'}
+                </h3>
+                <p className="text-xs text-[#3d3731] mt-0.5">
+                  {importStep === 'input' && 'Upload audio for Groq Whisper transcription or paste raw transcript notes.'}
+                  {importStep === 'review' && 'Verify extracted summary, promises, questions, and outcome before storing.'}
+                  {importStep === 'success' && 'Memories and tagged promises are now live in persistent long-term memory.'}
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  setShowImportModal(false);
+                  setImportExtractError(null);
+                }}
+                className="text-[#3d3731] hover:text-[#2a2622] text-xs font-bold px-2 py-1 clay-btn-secondary"
+              >
+                Close
+              </button>
+            </div>
+
+            {/* Error Banner */}
+            {importExtractError && (
+              <div className="p-3 rounded-[16px] bg-[#ede2df] border border-[#deb8b8] text-xs text-[#8f3e3e] flex items-center justify-between gap-2 shadow-xs">
+                <span className="leading-snug">{importExtractError}</span>
+                <button
+                  type="button"
+                  onClick={() => setImportExtractError(null)}
+                  className="text-xs font-semibold text-[#8f3e3e] hover:underline shrink-0"
+                >
+                  Dismiss
+                </button>
+              </div>
+            )}
+
+            {/* STEP 1: INPUT FORM */}
+            {importStep === 'input' && (
+              <form onSubmit={handleStartExtractImport} className="space-y-4 text-xs">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="block font-medium mb-1 text-[#443e37]">Contact *</label>
+                    <select
+                      value={importContactId}
+                      onChange={(e) => setImportContactId(e.target.value)}
+                      className="w-full px-3 py-2 text-xs clay-input bg-[#fcfaf7]"
+                      required
+                    >
+                      <option value="">Select a contact...</option>
+                      {contacts.map((c) => (
+                        <option key={c.id} value={c.id}>
+                          {c.name} ({c.company})
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block font-medium mb-1 text-[#443e37]">Meeting Date *</label>
+                    <input
+                      type="date"
+                      required
+                      value={importDate}
+                      onChange={(e) => setImportDate(e.target.value)}
+                      className="w-full px-3 py-2 text-xs clay-input"
+                    />
+                  </div>
+                </div>
+
+                {/* Input Method Switcher */}
+                <div>
+                  <label className="block font-medium mb-1 text-[#443e37]">Source Format *</label>
+                  <div className="clay-inset p-1 flex rounded-[18px] w-fit">
+                    <button
+                      type="button"
+                      onClick={() => setImportMode('text')}
+                      className={`px-3 py-1.5 text-xs font-medium rounded-[14px] transition-all ${
+                        importMode === 'text'
+                          ? 'clay-btn-secondary font-semibold text-[#2a2622]'
+                          : 'text-[#3d3731] hover:text-[#2a2622]'
+                      }`}
+                    >
+                      Paste Transcript / Text
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setImportMode('audio')}
+                      className={`px-3 py-1.5 text-xs font-medium rounded-[14px] transition-all ${
+                        importMode === 'audio'
+                          ? 'clay-btn-secondary font-semibold text-[#2a2622]'
+                          : 'text-[#3d3731] hover:text-[#2a2622]'
+                      }`}
+                    >
+                      Upload Audio (Groq Whisper)
+                    </button>
+                  </div>
+                </div>
+
+                {/* Textarea or Audio Upload */}
+                {importMode === 'text' ? (
+                  <div>
+                    <div className="flex items-center justify-between mb-1">
+                      <label className="block font-medium text-[#443e37]">
+                        Meeting Transcript / Discussion Notes *
+                      </label>
+                      <button
+                        type="button"
+                        onClick={async () => {
+                          try {
+                            const res = await fetch('/data/sample-transcript.txt');
+                            if (res.ok) {
+                              const text = await res.text();
+                              setImportTranscript(text);
+                            } else {
+                              // Fallback sample if file isn't in public
+                              setImportTranscript(`Elena Rostova (VP of Engineering, FinScale Corp) & Alex Mercer (Solutions Architect)
+Meeting Date: October 9, 2026
+
+Alex Mercer: Elena, great catching up again. Thanks for taking the time ahead of your Q4 planning cycle.
+Elena Rostova: Good to see you Alex. Let's get right into it. Last week's demo of the streaming telemetry proxy was promising, but we still have two critical hurdles before we can clear the POC for general production rollout.
+Alex Mercer: Understood. Let's address those head-on.
+Elena Rostova: First, our security audit team requires mutual TLS validation for all inter-service mesh calls between our Frankfurt VPC and your ingestion cluster. We need that documentation and sample Terraform module by October 18, 2026.
+Alex Mercer: We can commit to that. Our infrastructure team will deliver the mTLS configuration guide and reference Terraform scripts by October 18th.
+Elena Rostova: Perfect. Second is SLA guarantees during peak trading hours. We need 99.99% uptime with p99 latency under 45ms.
+Alex Mercer: We've stress-tested 50k transactions per second at 38ms p99. I will send over the certified benchmark report by October 14, 2026.
+Elena Rostova: That would give the risk committee huge confidence. On our side, I will personally review the updated Master Services Agreement with our General Counsel and return the marked-up liability clauses by October 21, 2026.
+Alex Mercer: That will keep us right on track for our November deployment target.
+Elena Rostova: One open question: how does your disaster recovery failover behave if AWS eu-central-1 experiences a multi-AZ outage? We need clarity on cross-region replication lag.
+Alex Mercer: Good question. I will consult our storage reliability engineers and get you a definitive answer on cross-region failover RPO and RTO by our next touchpoint.`);
+                            }
+                          } catch {
+                            // ignore
+                          }
+                        }}
+                        className="text-xs text-[#436b4d] font-semibold hover:underline"
+                      >
+                        Load Sample Transcript
+                      </button>
+                    </div>
+                    <textarea
+                      rows={8}
+                      required
+                      value={importTranscript}
+                      onChange={(e) => setImportTranscript(e.target.value)}
+                      placeholder="Paste conversation transcript, meeting notes, or call recording text..."
+                      className="w-full px-3 py-2 text-xs clay-input font-mono text-[11px] leading-relaxed"
+                    />
+                  </div>
+                ) : (
+                  <div>
+                    <label className="block font-medium mb-1 text-[#443e37]">
+                      Select Audio File (mp3, wav, m4a, webm - max 25MB) *
+                    </label>
+                    <div className="clay-card-flat p-4 rounded-[18px] border border-dashed border-[#ded7ca] text-center space-y-2">
+                      <input
+                        type="file"
+                        accept="audio/*"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0] || null;
+                          if (file && file.size > 25 * 1024 * 1024) {
+                            setImportExtractError('Audio file exceeds the 25MB maximum limit. Please choose a smaller file.');
+                            setImportAudioFile(null);
+                          } else {
+                            setImportAudioFile(file);
+                            setImportExtractError(null);
+                          }
+                        }}
+                        className="text-xs text-[#3d3731] file:mr-4 file:py-1.5 file:px-3 file:rounded-[14px] file:border-0 file:text-xs file:font-semibold file:clay-btn-secondary"
+                      />
+                      {importAudioFile && (
+                        <p className="text-xs text-[#436b4d] font-medium">
+                          Selected: {importAudioFile.name} ({(importAudioFile.size / (1024 * 1024)).toFixed(2)} MB)
+                        </p>
+                      )}
+                      <p className="text-[11px] text-[#3d3731]">
+                        Groq Whisper (`whisper-large-v3-turbo`) will transcribe speech with high fidelity and zero local GPU overhead.
+                      </p>
+                    </div>
+                  </div>
+                )}
+
+                <div className="pt-2 flex justify-end gap-2 border-t border-[#ded7ca]">
+                  <button
+                    type="button"
+                    onClick={() => setShowImportModal(false)}
+                    className="px-3.5 py-1.5 text-xs font-medium clay-btn-secondary"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={isExtractingImport}
+                    className="px-4 py-1.5 text-xs font-semibold clay-btn-primary disabled:opacity-60 flex items-center gap-2"
+                  >
+                    {isExtractingImport ? (
+                      <>
+                        <span className="inline-block w-3 h-3 border-2 border-current border-r-transparent rounded-full animate-spin" />
+                        {importMode === 'audio' ? 'Transcribing with Whisper & Extracting...' : 'Extracting with Groq...'}
+                      </>
+                    ) : (
+                      'Extract Structured Note'
+                    )}
+                  </button>
+                </div>
+              </form>
+            )}
+
+            {/* STEP 2: REVIEW & EDIT */}
+            {importStep === 'review' && extractedImportData && (
+              <div className="space-y-4 text-xs">
+                <div className="p-3 bg-[#dfe7e1]/60 border border-[#bcd4c0] rounded-[16px] text-xs text-[#436b4d]">
+                  Review and edit the structured meeting information extracted by the LLM before retaining it into Hindsight.
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  <div>
+                    <label className="block font-medium mb-1 text-[#443e37]">Meeting Date</label>
+                    <input
+                      type="date"
+                      value={importDate}
+                      onChange={(e) => setImportDate(e.target.value)}
+                      className="w-full px-3 py-1.5 text-xs clay-input"
+                    />
+                  </div>
+                  <div>
+                    <label className="block font-medium mb-1 text-[#443e37]">Outcome</label>
+                    <select
+                      value={extractedImportData.outcome}
+                      onChange={(e) =>
+                        setExtractedImportData({
+                          ...extractedImportData,
+                          outcome: e.target.value as MeetingOutcome,
+                        })
+                      }
+                      className="w-full px-3 py-1.5 text-xs clay-input bg-[#fcfaf7]"
+                    >
+                      <option value="advanced">Advanced (Forward motion)</option>
+                      <option value="stalled">Stalled (Waiting/Blocked)</option>
+                      <option value="lost_ground">Lost Ground (Risk/Pushback)</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block font-medium mb-1 text-[#443e37]">Sentiment</label>
+                    <select
+                      value={extractedImportData.sentiment}
+                      onChange={(e) =>
+                        setExtractedImportData({
+                          ...extractedImportData,
+                          sentiment: e.target.value,
+                        })
+                      }
+                      className="w-full px-3 py-1.5 text-xs clay-input bg-[#fcfaf7]"
+                    >
+                      <option value="positive">Positive</option>
+                      <option value="mixed">Mixed</option>
+                      <option value="neutral">Neutral</option>
+                      <option value="negative">Negative</option>
+                    </select>
+                  </div>
+                </div>
+
+                {/* Summary */}
+                <div>
+                  <label className="block font-medium mb-1 text-[#443e37]">Executive Summary</label>
+                  <textarea
+                    rows={3}
+                    value={extractedImportData.summary}
+                    onChange={(e) =>
+                      setExtractedImportData({
+                        ...extractedImportData,
+                        summary: e.target.value,
+                      })
+                    }
+                    className="w-full px-3 py-2 text-xs clay-input leading-relaxed"
+                  />
+                </div>
+
+                {/* Promises List (Editable) */}
+                <div>
+                  <div className="flex items-center justify-between mb-1.5">
+                    <label className="block font-medium text-[#443e37]">
+                      Extracted Commitments & Promises ({extractedImportData.promises.length})
+                    </label>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setExtractedImportData({
+                          ...extractedImportData,
+                          promises: [
+                            ...extractedImportData.promises,
+                            { promise: '', owner: 'Our Team', dueDate: null, status: 'pending' },
+                          ],
+                        });
+                      }}
+                      className="text-xs text-[#436b4d] font-semibold hover:underline"
+                    >
+                      + Add Promise
+                    </button>
+                  </div>
+
+                  <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
+                    {extractedImportData.promises.map((p, idx) => (
+                      <div key={idx} className="p-2.5 bg-[#eee8dc] rounded-[16px] border border-[#ded7ca] space-y-2">
+                        <div className="flex items-center gap-2">
+                          <select
+                            value={p.owner}
+                            onChange={(e) => {
+                              const updated = [...extractedImportData.promises];
+                              updated[idx].owner = e.target.value as 'us' | 'them' | 'both';
+                              setExtractedImportData({ ...extractedImportData, promises: updated });
+                            }}
+                            className="w-1/4 px-2 py-1 text-xs clay-input bg-[#fcfaf7]"
+                          >
+                            <option value="us">us (Our Team)</option>
+                            <option value="them">them (Contact)</option>
+                            <option value="both">both (Joint)</option>
+                          </select>
+                          <input
+                            type="text"
+                            placeholder="ISO date (YYYY-MM-DD)"
+                            value={p.dueDate || ''}
+                            onChange={(e) => {
+                              const updated = [...extractedImportData.promises];
+                              updated[idx].dueDate = e.target.value ? e.target.value.trim() : null;
+                              setExtractedImportData({ ...extractedImportData, promises: updated });
+                            }}
+                            className="w-1/4 px-2 py-1 text-xs clay-input"
+                          />
+                          <input
+                            type="text"
+                            placeholder="Due note (e.g. next touchpoint)"
+                            value={(p as any).dueNote || ''}
+                            onChange={(e) => {
+                              const updated = [...extractedImportData.promises];
+                              (updated[idx] as any).dueNote = e.target.value || null;
+                              setExtractedImportData({ ...extractedImportData, promises: updated });
+                            }}
+                            className="w-1/4 px-2 py-1 text-xs clay-input"
+                          />
+                          <select
+                            value={p.status}
+                            onChange={(e) => {
+                              const updated = [...extractedImportData.promises];
+                              updated[idx].status = e.target.value;
+                              setExtractedImportData({ ...extractedImportData, promises: updated });
+                            }}
+                            className="w-1/5 px-2 py-1 text-xs clay-input bg-[#fcfaf7]"
+                          >
+                            <option value="pending">Pending</option>
+                            <option value="in_progress">In Progress</option>
+                            <option value="kept">Kept</option>
+                          </select>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const updated = extractedImportData.promises.filter((_, i) => i !== idx);
+                              setExtractedImportData({ ...extractedImportData, promises: updated });
+                            }}
+                            className="text-[#8f3e3e] font-bold px-1.5 hover:underline"
+                          >
+                            x
+                          </button>
+                        </div>
+                        <textarea
+                          rows={2}
+                          placeholder="Promise description"
+                          value={p.promise}
+                          onChange={(e) => {
+                            const updated = [...extractedImportData.promises];
+                            updated[idx].promise = e.target.value;
+                            setExtractedImportData({ ...extractedImportData, promises: updated });
+                          }}
+                          className="w-full px-2 py-1 text-xs clay-input"
+                        />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Open Questions */}
+                <div>
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="block font-medium text-[#443e37]">
+                      Open Questions & Blockers ({extractedImportData.openQuestions.length})
+                    </label>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setExtractedImportData({
+                          ...extractedImportData,
+                          openQuestions: [...extractedImportData.openQuestions, ''],
+                        });
+                      }}
+                      className="text-xs text-[#436b4d] font-semibold hover:underline"
+                    >
+                      + Add Question
+                    </button>
+                  </div>
+                  <div className="space-y-1.5">
+                    {extractedImportData.openQuestions.map((q, idx) => (
+                      <div key={idx} className="flex items-center gap-1.5">
+                        <input
+                          type="text"
+                          value={q}
+                          onChange={(e) => {
+                            const updated = [...extractedImportData.openQuestions];
+                            updated[idx] = e.target.value;
+                            setExtractedImportData({ ...extractedImportData, openQuestions: updated });
+                          }}
+                          className="w-full px-2 py-1 text-xs clay-input"
+                          placeholder="Unresolved question..."
+                        />
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const updated = extractedImportData.openQuestions.filter((_, i) => i !== idx);
+                            setExtractedImportData({ ...extractedImportData, openQuestions: updated });
+                          }}
+                          className="text-[#8f3e3e] font-bold px-1.5 hover:underline"
+                        >
+                          x
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Review Action Buttons */}
+                <div className="pt-2 flex justify-between items-center border-t border-[#ded7ca]">
+                  <button
+                    type="button"
+                    onClick={() => setImportStep('input')}
+                    className="px-3.5 py-1.5 text-xs font-medium clay-btn-secondary"
+                  >
+                    Back to Input
+                  </button>
+                  <div className="flex gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setShowImportModal(false)}
+                      className="px-3.5 py-1.5 text-xs font-medium clay-btn-secondary"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleSaveImportedMeeting}
+                      disabled={isSavingImport}
+                      className="px-4 py-1.5 text-xs font-semibold clay-btn-primary disabled:opacity-60 flex items-center gap-2"
+                    >
+                      {isSavingImport ? (
+                        <>
+                          <span className="inline-block w-3 h-3 border-2 border-current border-r-transparent rounded-full animate-spin" />
+                          Retaining into Hindsight...
+                        </>
+                      ) : (
+                        'Retain into Hindsight Memory'
+                      )}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* STEP 3: SUCCESS */}
+            {importStep === 'success' && importSaveResult && (
+              <div className="space-y-4 text-xs">
+                <div className="p-4 bg-[#dfe7e1] border border-[#bcd4c0] rounded-[18px] text-[#436b4d] space-y-1.5">
+                  <div className="flex items-center gap-2 font-bold text-sm">
+                    <span className="w-2 h-2 rounded-full bg-[#436b4d]" />
+                    Successfully Retained into Hindsight!
+                  </div>
+                  <p className="text-xs leading-relaxed text-[#2a2622]">
+                    The meeting record and <strong>{importSaveResult.retainedPromisesCount} separate promise memories</strong> were indexed into the Hindsight memory bank.
+                  </p>
+                </div>
+
+                <div className="clay-card-flat p-3.5 rounded-[16px] border border-[#ded7ca] space-y-2">
+                  <span className="text-xs font-semibold text-[#3d3731] block">Memory Tags Applied:</span>
+                  <div className="flex flex-wrap gap-1.5">
+                    <span className="px-2 py-0.5 text-xs bg-[#e4ded4] text-[#3d3731] rounded-[10px] font-mono">
+                      contact:{importContactId}
+                    </span>
+                    <span className="px-2 py-0.5 text-xs bg-[#e4ded4] text-[#3d3731] rounded-[10px] font-mono">
+                      date:{importDate}
+                    </span>
+                    <span className="px-2 py-0.5 text-xs bg-[#e4ded4] text-[#3d3731] rounded-[10px] font-mono">
+                      type:meeting
+                    </span>
+                    <span className="px-2 py-0.5 text-xs bg-[#e4ded4] text-[#3d3731] rounded-[10px] font-mono">
+                      type:promise
+                    </span>
+                  </div>
+                </div>
+
+                <div className="pt-2 flex justify-end gap-2 border-t border-[#ded7ca]">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowImportModal(false);
+                      setImportStep('input');
+                    }}
+                    className="px-3.5 py-1.5 text-xs font-medium clay-btn-secondary"
+                  >
+                    Done
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowImportModal(false);
+                      setImportStep('input');
+                      setActiveTab('history');
+                      setHighlightedDate(importDate);
                     }}
                     className="px-4 py-1.5 text-xs font-semibold clay-btn-primary"
                   >

@@ -1,8 +1,8 @@
 import { NextResponse } from 'next/server';
-import { getContactById } from '@/lib/store';
+import { getContactById, getMeetingsByContact } from '@/lib/store';
 import { recall, reflect } from '@/lib/hindsight';
 import { chatCompletion, safeParseJson } from '@/lib/groq';
-import { MemoryFact } from '@/types';
+import { MemoryFact, LearnedInsights } from '@/types';
 
 export async function POST(req: Request) {
   try {
@@ -20,6 +20,9 @@ export async function POST(req: Request) {
 
     const allFacts: MemoryFact[] = [];
     let reflectSynthesis = '';
+    let reflectEvidence: any[] = [];
+
+    let insightsProvenance: 'Inferred by Hindsight' | 'Synthesized from recalled memories' | null = null;
 
     // 1. Recall & Reflect from Hindsight memory bank only when useMemory is true
     if (useMemory) {
@@ -39,16 +42,20 @@ export async function POST(req: Request) {
           queries.map((q) => recall(q, { contactId: contact.id, budget: 'mid', maxTokens: 4000 }))
         ),
         reflect(
-          `Analyze past meetings with ${contact.name}. Which specific tactics and behaviors led to meetings that advanced the partnership versus those that stalled or lost ground? Synthesize the key strategic patterns.`,
-          { contactId: contact.id, budget: 'low' }
+          `Analyze all past meetings and interactions with ${contact.name}. What were the key trust turning points, which specific tactics advanced versus stalled meetings, and what are ${contact.name}'s communication preferences? Synthesize the key strategic patterns.`,
+          { contactId: contact.id, budget: 'low', includeFacts: true }
         ).catch((err) => {
           console.warn('Reflect warning in /api/briefing:', err);
           return { text: '' };
         }),
       ]);
 
-      if (reflectResult && reflectResult.text) {
-        reflectSynthesis = reflectResult.text;
+      if (reflectResult && reflectResult.text && reflectResult.text.trim().length > 0) {
+        reflectSynthesis = reflectResult.text.trim();
+        insightsProvenance = 'Inferred by Hindsight';
+        if (reflectResult.basedOn?.memories) {
+          reflectEvidence = reflectResult.basedOn.memories;
+        }
       }
 
       const factTextSet = new Set<string>();
@@ -64,6 +71,39 @@ export async function POST(req: Request) {
           }
         } else if (res.status === 'rejected') {
           failedRecallCount++;
+        }
+      }
+
+      // If reflect is unusable after two attempts, fall back to generating insights with Groq from recalled facts
+      if (!reflectSynthesis && allFacts.length > 0) {
+        try {
+          console.log('[Briefing] Hindsight reflect unusable; falling back to Groq synthesis from recalled facts.');
+          const fallbackPrompt = `You are an executive meeting strategist. Based ONLY on the following recalled memory facts from past meetings with ${contact.name}, identify:
+1. Key trust turning points (moments where trust advanced, broke, or recovered)
+2. Which specific tactics advanced meetings versus stalled them
+3. ${contact.name}'s communication preferences
+
+RECALLED FACTS:
+${allFacts.slice(0, 15).map((f, i) => `- [${f.occurredStart ? f.occurredStart.slice(0, 10) : 'Date unknown'}] ${f.text}`).join('\n')}
+
+Synthesize the key patterns concisely covering all three areas. Do not use emojis or em dashes.`;
+
+          const fallbackResponse = await chatCompletion({
+            model: process.env.GROQ_MODEL || 'openai/gpt-oss-120b',
+            messages: [
+              { role: 'system', content: 'You are an executive strategist analyzing past meeting facts.' },
+              { role: 'user', content: fallbackPrompt },
+            ],
+            temperature: 0.1,
+            max_tokens: 450,
+          });
+
+          if (fallbackResponse && fallbackResponse.content) {
+            reflectSynthesis = fallbackResponse.content.trim();
+            insightsProvenance = 'Synthesized from recalled memories';
+          }
+        } catch (fallbackErr) {
+          console.warn('[Briefing] Fallback Groq synthesis failed:', fallbackErr);
         }
       }
 
@@ -227,7 +267,7 @@ UPCOMING MEETING DETAILS:
 
 PAST MEETING MEMORIES FROM HINDSIGHT:
 ${memoriesPromptSection}
-${reflectSynthesis ? `\nHINDSIGHT REFLECT SYNTHESIS (PATTERNS ACROSS MEMORIES - ADVANCED VS STALLED TACTICS):\n${reflectSynthesis.slice(0, 700)}\n` : ''}
+${reflectSynthesis ? `\n${insightsProvenance === 'Inferred by Hindsight' ? 'HINDSIGHT REFLECT SYNTHESIS (INFERRED BY HINDSIGHT)' : 'MEMORIES REFLECTION SYNTHESIS (SYNTHESIZED FROM RECALLED MEMORIES)'} (PATTERNS ACROSS MEMORIES - ADVANCED VS STALLED TACTICS):\n${reflectSynthesis.slice(0, 700)}\n` : ''}
 Generate the JSON briefing now.`;
 
     let groqResponse;
@@ -437,11 +477,114 @@ Generate the JSON briefing now.`;
       };
     }
 
+    // 4. Generate structured Learned Insights scoped to contact
+    let learnedInsights: LearnedInsights | undefined = undefined;
+
+    if (useMemory && reflectSynthesis) {
+      console.log('[Briefing] Generating learned insights from reflectSynthesis (length:', reflectSynthesis.length, ')...');
+      try {
+        const contactMeetings = getMeetingsByContact(contact.id);
+        const evidencePool = reflectEvidence.length > 0 ? reflectEvidence : allFacts;
+        console.log('[Briefing] Evidence pool length:', evidencePool.length, 'Contact meetings:', contactMeetings.length);
+
+        const parsePrompt = `You are an executive relationship intelligence parser.
+Given this strategic synthesis about ${contact.name} (${contact.company}):
+
+SYNTHESIS (${insightsProvenance}):
+${reflectSynthesis}
+
+SUPPORTING RECALLED EVIDENCE:
+${evidencePool.slice(0, 15).map((m: any) => `- [Date: ${m.occurred_start?.slice(0, 10) || m.metadata?.date || m.mentioned_at?.slice(0, 10) || 'Date unknown'}] ${m.text}`).join('\n')}
+
+PAST MEETINGS IN CRM:
+${contactMeetings.map((m) => `- Date: ${m.date} | Summary: ${m.summary.slice(0, 80)}`).join('\n')}
+
+Extract clean JSON strictly matching:
+{
+  "trustTurningPoints": [
+    {
+      "insight": "<concise turning point description>",
+      "sourceDate": "<YYYY-MM-DD of the supporting meeting if identified from memories or CRM, otherwise null>",
+      "meetingTitle": "<short title/summary of supporting meeting if known, otherwise null>"
+    }
+  ],
+  "tactics": {
+    "advancing": [
+      {
+        "tactic": "<concise tactic that advanced meetings>",
+        "sourceDate": "<YYYY-MM-DD or null>",
+        "meetingTitle": "<short title/summary or null>"
+      }
+    ],
+    "stalling": [
+      {
+        "tactic": "<concise tactic or pitfall that stalled meetings>",
+        "sourceDate": "<YYYY-MM-DD or null>",
+        "meetingTitle": "<short title/summary or null>"
+      }
+    ]
+  },
+  "communicationPreferences": [
+    {
+      "preference": "<concise communication preference, e.g. Direct and purposeful, Demands certified technical proof>",
+      "sourceDate": "<YYYY-MM-DD or null>",
+      "meetingTitle": "<short title/summary or null>"
+    }
+  ]
+}
+
+Strict rules:
+- Only output valid JSON matching the schema.
+- For each item, link to the closest supporting meeting date in YYYY-MM-DD format if mentioned or implied in the evidence.
+- If a date cannot be determined, set sourceDate to null.`;
+
+        const parseRes = await chatCompletion({
+          model: process.env.GROQ_MODEL || 'openai/gpt-oss-120b',
+          messages: [
+            { role: 'system', content: 'You are an executive intelligence extractor. Output JSON only.' },
+            { role: 'user', content: parsePrompt },
+          ],
+          temperature: 0.1,
+          response_format: { type: 'json_object' },
+        });
+
+        const parsed = safeParseJson(parseRes.content || '{}');
+        const payload = (parsed.data && typeof parsed.data === 'object') ? parsed.data : parsed;
+        console.log('[Briefing] parsed result keys:', Object.keys(parsed), 'payload keys:', Object.keys(payload));
+
+        if (payload.trustTurningPoints || payload.tactics || payload.communicationPreferences) {
+          learnedInsights = {
+            provenance: insightsProvenance || 'Synthesized from recalled memories',
+            trustTurningPoints: Array.isArray(payload.trustTurningPoints) ? payload.trustTurningPoints : [],
+            tactics: {
+              advancing: Array.isArray(payload.tactics?.advancing) ? payload.tactics.advancing : [],
+              stalling: Array.isArray(payload.tactics?.stalling) ? payload.tactics.stalling : [],
+            },
+            communicationPreferences: Array.isArray(payload.communicationPreferences) ? payload.communicationPreferences : [],
+            rawSynthesisText: reflectSynthesis,
+            basedOnCount: evidencePool.length,
+          };
+          briefingData.learnedInsights = learnedInsights;
+          console.log('[Briefing] Successfully attached learnedInsights:', {
+            provenance: learnedInsights.provenance,
+            trustTurningPoints: learnedInsights.trustTurningPoints.length,
+            advancingTactics: learnedInsights.tactics.advancing.length,
+            stallingTactics: learnedInsights.tactics.stalling.length,
+            communicationPreferences: learnedInsights.communicationPreferences.length,
+          });
+        }
+      } catch (err) {
+        console.warn('Error formatting learned insights:', err);
+      }
+    }
+
     return NextResponse.json({
       contact,
       briefing: briefingData,
+      learnedInsights: learnedInsights || undefined,
       relevantMemories: allFacts,
       reflectSynthesis: reflectSynthesis || undefined,
+      insightsProvenance: insightsProvenance || undefined,
       useMemory,
       generatedAt: new Date().toISOString(),
     });

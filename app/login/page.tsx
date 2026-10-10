@@ -18,7 +18,7 @@ export default function LoginPage() {
       const hasCookie = document.cookie.includes('demo_session=1');
       const hasLocal = localStorage.getItem('demo_session') === 'true';
       if (hasCookie || hasLocal) {
-        router.push('/app');
+        router.push('/today');
       }
     }
   }, [router]);
@@ -42,7 +42,7 @@ export default function LoginPage() {
       localStorage.setItem('demo_user_name', name.trim());
     }
 
-    router.push('/app');
+    router.push('/today');
   };
 
   return (

@@ -1,0 +1,41 @@
+BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//MeetingPrep//CalendarImport//EN
+CALSCALE:GREGORIAN
+METHOD:PUBLISH
+X-WR-CALNAME:Work Schedule
+BEGIN:VEVENT
+UID:mtg-20261010-001@meetingprep.app
+DTSTAMP:20261010T080000Z
+DTSTART:20261010T100000Z
+DTEND:20261010T110000Z
+SUMMARY:FinScale POC Review & mTLS Architecture
+DESCRIPTION:Executive review of streaming telemetry proxy, mTLS configuration module, and liability clause alignment ahead of Q4 freeze.
+LOCATION:Google Meet
+ATTENDEE;CN=Elena Rostova:mailto:elena.rostova@finscale.io
+ATTENDEE;CN=Alex Mercer:mailto:alex.mercer@ourcompany.com
+STATUS:CONFIRMED
+END:VEVENT
+BEGIN:VEVENT
+UID:mtg-20261010-002@meetingprep.app
+DTSTAMP:20261010T083000Z
+DTSTART:20261010T140000Z
+DTEND:20261010T150000Z
+SUMMARY:HealthBridge Telehealth Keynote & Contract Rollout
+DESCRIPTION:Alignment on Q4 enterprise contract rollout kickoff, joint customer summit keynote alignment, and predictive license alert roadmap preview.
+LOCATION:Zoom
+ATTENDEE;CN=Marcus Vance:mailto:m.vance@healthbridge.med
+STATUS:CONFIRMED
+END:VEVENT
+BEGIN:VEVENT
+UID:mtg-20261010-003@meetingprep.app
+DTSTAMP:20261010T090000Z
+DTSTART:20261010T163000Z
+DTEND:20261010T173000Z
+SUMMARY:Orbit Logistics Depot Deployment Sync
+DESCRIPTION:Review Dallas 100-truck depot rollout readiness, static egress IP whitelisting, and 24/7 on-call escalation rotation.
+LOCATION:Microsoft Teams
+ATTENDEE;CN=Amara Chen:mailto:amara.chen@orbitlogistics.net
+STATUS:CONFIRMED
+END:VEVENT
+END:VCALENDAR
